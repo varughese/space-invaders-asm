@@ -14,6 +14,9 @@
 .eqv PLAYER_Y_LBOUND	46
 .eqv PLAYER_Y_UBOUND	52
 
+.eqv MAX_BULLETS 10
+.eqv BULLET_RATE 10 # in frames
+
 .data
 # don't get rid of these, they're used by wait_for_next_frame.
 last_frame_time:  .word 0
@@ -24,6 +27,8 @@ player_x: .word 30
 player_y: .word 49
 player_lives: .word 3
 player_bullets_left: .word 50
+player_bullet_last_fired: .word 0
+
 
 .text
 
@@ -37,6 +42,7 @@ main:
 _main_loop:
 	# check for input,
 	jal move_player
+	jal check_if_firing
 	# update everything,
 	jal draw_player
 	jal draw_player_lives
@@ -77,6 +83,31 @@ leave	s0
 
 # .....and here's where all the rest of your code goes :D
 
+####### BULLETS
+check_if_firing:
+enter
+	jal input_get_keys
+	and t0, v0, KEY_B # t0 = keys & KEY_B
+
+	bne t0, KEY_B, _finish_check_if_firing
+	# they clicked the B key
+
+	lw t0, player_bullet_last_fired
+	lw t1, frame_counter
+	sub t0 t1 t0
+	# t0 = frames since last fire
+	blt t0, BULLET_RATE, _finish_check_if_firing
+	sw t1, player_bullet_last_fired
+
+	lw t1 player_bullets_left
+	dec t1
+	sw t1 player_bullets_left
+	_finish_check_if_firing:
+leave
+####### END BULLETS
+
+
+####### MOVEMENT
 
 move_player:
 enter
@@ -97,10 +128,10 @@ enter
 	bne t2, KEY_U, _check_key_d_pressed
 	jal move_player_up
 	_check_key_d_pressed:
-	bne t3, KEY_D, _finish_check
+	bne t3, KEY_D, _finish_check_move_player
 	jal move_player_down
 
-	_finish_check:
+	_finish_check_move_player:
 
 	jal check_player_in_bounds
 leave
@@ -163,6 +194,10 @@ enter
 
 	_finish:
 leave
+
+############## END MOVEMENT
+
+############## DRAWING
 
 draw_player:
 enter
