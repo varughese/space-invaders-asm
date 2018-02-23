@@ -3,6 +3,7 @@
 
 .include "convenience.asm"
 .include "display.asm"
+.include "images.asm"
 
 .eqv GAME_TICK_MS      16
 
@@ -19,16 +20,10 @@ last_frame_time:  .word 0
 frame_counter:    .word 0
 
 # PLAYER
-player_image: .byte
-	0	0	4	0	0
-	0	4	7	4	0
-	4	7	7	7	4
-	4	4	4	4	4
-	4	0	2	0	4
 player_x: .word 30
 player_y: .word 49
-
-
+player_lives: .word 3
+player_bullets_left: .word 50
 
 .text
 
@@ -41,9 +36,11 @@ main:
 
 _main_loop:
 	# check for input,
-	jal check_input
+	jal move_player
 	# update everything,
 	jal draw_player
+	jal draw_player_lives
+	jal draw_bullets_lefts
 	# then draw everything.
 	jal display_update_and_clear
 	jal	wait_for_next_frame
@@ -81,7 +78,7 @@ leave	s0
 # .....and here's where all the rest of your code goes :D
 
 
-check_input:
+move_player:
 enter
 	jal input_get_keys
 
@@ -151,12 +148,15 @@ enter
 	sw t2, player_x
 	b _check_y_l_bound
 	_check_x_u_bound:
+	# add t0, t0, 5
 	blt t0 PLAYER_X_UBOUND _check_y_l_bound
 	sw t3, player_x
 
 	_check_y_l_bound:
+	# add t2, t1, 5
 	bgt t1, PLAYER_Y_LBOUND, _check_y_u_bound
 	sw t4, player_y
+	b _finish
 	_check_y_u_bound:
 	blt t1, PLAYER_Y_UBOUND, _finish
 	sw t5, player_y
@@ -170,4 +170,35 @@ enter
 	lw a1, player_y
 	la a2, player_image
 	jal display_blit_5x5
+leave
+
+draw_player_lives:
+enter s0, s1, s2, s3
+	lw s0, player_lives
+	li s1, 0 # incrementer, i=0
+	li s2, 57 # rightmost x pos of heart
+	li s3, 58 # y pos of heart
+	_draw_lives_loop:
+		mul t0, s1, 7
+		sub t0, s2, t0
+
+		move a0, t0
+		move a1, s3
+		la a2 player_life_image
+		jal display_blit_5x5
+
+		# i++
+		inc s1
+		bge s1 s0 _finish_draw_lives_loop
+		b _draw_lives_loop
+	_finish_draw_lives_loop:
+leave s0, s1, s2, s3
+
+draw_bullets_lefts:
+enter
+	# TODO: move these and 0, 57, 58 into constants
+	li a0 2
+	li a1 58
+	lw a2 player_bullets_left
+	jal display_draw_int
 leave
