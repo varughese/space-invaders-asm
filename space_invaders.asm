@@ -29,6 +29,9 @@ player_lives: .word 3
 player_bullets_left: .word 50
 player_bullet_last_fired: .word 0
 
+bullet_x: 		.byte 0:MAX_BULLETS
+bullet_y: 		.byte 0:MAX_BULLETS
+bullet_active: 	.byte 0:MAX_BULLETS
 
 .text
 
@@ -43,10 +46,13 @@ _main_loop:
 	# check for input,
 	jal move_player
 	jal check_if_firing
-	# update everything,
+	# move bullets
+	jal move_bullets
+	# draw everything,
 	jal draw_player
 	jal draw_player_lives
 	jal draw_bullets_lefts
+	jal draw_bullets
 	# then draw everything.
 	jal display_update_and_clear
 	jal	wait_for_next_frame
@@ -90,20 +96,77 @@ enter
 	and t0, v0, KEY_B # t0 = keys & KEY_B
 
 	bne t0, KEY_B, _finish_check_if_firing
-	# they clicked the B key
+	# They clicked the B key:
 
+	# t0 = frames since last fire
 	lw t0, player_bullet_last_fired
 	lw t1, frame_counter
 	sub t0 t1 t0
-	# t0 = frames since last fire
+
+	# fire bullet if frames since last fire is more than BULLET_RATE
 	blt t0, BULLET_RATE, _finish_check_if_firing
 	sw t1, player_bullet_last_fired
 
+	# Decrement bullets left and exit game if none left
 	lw t1 player_bullets_left
 	dec t1
+	blt t1, 0, _game_over
 	sw t1 player_bullets_left
+
+	jal fire_bullet
+
 	_finish_check_if_firing:
 leave
+
+
+fire_bullet:
+enter
+	jal find_active_bullet
+
+	bgt v0 MAX_BULLETS _end_firebullet
+
+	lw t0 player_x
+	lw t1 player_y
+
+	la t2 bullet_x
+	add t2, t2, v0
+	sb t0, (t2)
+
+	la t2 bullet_y
+	add t2, t2, v0
+	sb t0, (t2)
+
+	li t0 1
+	la t1 bullet_active
+	add t1, t1, v0
+	sb t0 (t1)
+	_end_firebullet:
+leave
+
+find_active_bullet:
+enter
+	li t0 0
+	_main_loop_findactivebullet:
+		bgt t0, MAX_BULLETS _end_findactivebullet
+		# b _loop_findactivebullet
+	_loop_findactivebullet:
+		# bullet_active [i]
+		la t1, bullet_active
+		add t1, t1, t0
+		lbu t2, (t1)
+
+		beq t2, 0, _end_findactivebullet
+
+		inc t0
+		b _main_loop_findactivebullet
+	_end_findactivebullet:
+		move v0, t0
+leave
+
+move_bullets:
+enter
+leave
+
 ####### END BULLETS
 
 
@@ -237,3 +300,18 @@ enter
 	lw a2 player_bullets_left
 	jal display_draw_int
 leave
+
+draw_bullets:
+enter s0
+	li s0, 0
+	_draw_bullets_loop:
+		lb	a0, bullet_x(s0)
+		lb	a1, bullet_y(s0)
+		li	a2, COLOR_WHITE
+		jal	display_set_pixel
+
+		inc s0
+		bge s0 MAX_BULLETS _finish_draw_bullets_loop
+		b _draw_bullets_loop
+	_finish_draw_bullets_loop:
+leave s0
