@@ -34,7 +34,6 @@ bullet_y: 		.byte 0:MAX_BULLETS
 bullet_active: 	.byte 0:MAX_BULLETS
 
 .text
-
 # --------------------------------------------------------------------------------------------------
 
 .globl main
@@ -103,15 +102,9 @@ enter
 	lw t1, frame_counter
 	sub t0 t1 t0
 
-	# fire bullet if frames since last fire is more than BULLET_RATE
+	# attempt to fire bullet if frames since last fire is more than BULLET_RATE
 	blt t0, BULLET_RATE, _finish_check_if_firing
 	sw t1, player_bullet_last_fired
-
-	# Decrement bullets left and exit game if none left
-	lw t1 player_bullets_left
-	dec t1
-	blt t1, 0, _game_over
-	sw t1 player_bullets_left
 
 	jal fire_bullet
 
@@ -120,28 +113,36 @@ leave
 
 
 fire_bullet:
-enter
+enter s0
 	jal find_active_bullet
+	move s0 v0
 
-	bgt v0 MAX_BULLETS _end_firebullet
+	bge s0 MAX_BULLETS _end_firebullet
 
 	lw t0 player_x
 	lw t1 player_y
 
 	la t2 bullet_x
-	add t2, t2, v0
+	add t2, t2, s0
 	sb t0, (t2)
 
 	la t2 bullet_y
-	add t2, t2, v0
-	sb t0, (t2)
+	add t2, t2, s0
+	sb t1, (t2)
 
 	li t0 1
 	la t1 bullet_active
-	add t1, t1, v0
+	add t1, t1, s0
 	sb t0 (t1)
+
+	# Decrement bullets left and exit game if none left
+	lw t1 player_bullets_left
+	dec t1
+	blt t1, 0, _game_over
+	sw t1 player_bullets_left
+
 	_end_firebullet:
-leave
+leave s0
 
 find_active_bullet:
 enter
@@ -169,9 +170,7 @@ leave
 
 ####### END BULLETS
 
-
 ####### MOVEMENT
-
 move_player:
 enter
 	jal input_get_keys
@@ -260,6 +259,7 @@ leave
 
 ############## END MOVEMENT
 
+
 ############## DRAWING
 
 draw_player:
@@ -302,16 +302,19 @@ enter
 leave
 
 draw_bullets:
-enter s0
+enter s0, s1
 	li s0, 0
+	jal find_active_bullet
+	move s1 v0
 	_draw_bullets_loop:
-		lb	a0, bullet_x(s0)
-		lb	a1, bullet_y(s0)
+		bge s0 s1 _finish_draw_bullets_loop
+
+		lbu	a0, bullet_x(s0)
+		lbu	a1, bullet_y(s0)
 		li	a2, COLOR_WHITE
 		jal	display_set_pixel
 
 		inc s0
-		bge s0 MAX_BULLETS _finish_draw_bullets_loop
 		b _draw_bullets_loop
 	_finish_draw_bullets_loop:
-leave s0
+leave s0, s1
