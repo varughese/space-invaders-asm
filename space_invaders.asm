@@ -41,13 +41,17 @@ _main_loop:
 	# check for input,
 	jal move_player
 	jal check_if_firing
-	# move bullets
-	jal move_bullets
+
 	# draw everything,
 	jal draw_player
 	jal draw_player_lives
 	jal draw_bullets_lefts
 	jal draw_bullets
+
+	# move bullets
+	jal move_bullets
+
+
 	# then draw everything.
 	jal display_update_and_clear
 	jal	wait_for_next_frame
@@ -136,7 +140,7 @@ enter s0
 	# Decrement bullets left and exit game if none left
 	lw t1 player_bullets_left
 	dec t1
-	blt t1, 0, _game_over
+	ble t1, 0, _game_over
 	sw t1 player_bullets_left
 
 	_end_firebullet:
@@ -165,7 +169,7 @@ move_bullets:
 enter s0
 	li s0 0
 	_main_loop_movebullets:
-		bgt s0, MAX_BULLETS _end_movebullets
+		bge s0, MAX_BULLETS _end_movebullets
 	_loop_movebullets:
 		lb t0 bullet_active(s0)
 
@@ -180,8 +184,11 @@ enter s0
 		blt t1 0 _delete_bullet
 		sb t1 bullet_y(s0)
 		b _do_not_delete_bullet
-		
+
 		_delete_bullet:
+		li t5 30
+		print_int t5
+		print_char '\n'
 		sb zero bullet_active(s0)
 
 		_do_not_delete_bullet:
@@ -241,17 +248,19 @@ leave
 draw_bullets:
 enter s0, s1
 	li s0, 0
-	jal find_active_bullet
-	move s1 v0
+	_draw_bullets_main_loop:
+		bge s0 MAX_BULLETS _finish_draw_bullets_loop
 	_draw_bullets_loop:
-		bge s0 s1 _finish_draw_bullets_loop
+		lb t0 bullet_active(s0)
+		beq t0 0, _skip_draw_bullet
 
 		lbu	a0, bullet_x(s0)
 		lbu	a1, bullet_y(s0)
 		li	a2, COLOR_WHITE
 		jal	display_set_pixel
 
+		_skip_draw_bullet:
 		inc s0
-		b _draw_bullets_loop
+		b _draw_bullets_main_loop
 	_finish_draw_bullets_loop:
 leave s0, s1
