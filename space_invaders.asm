@@ -9,9 +9,18 @@
 .eqv GAME_TICK_MS      16
 
 .eqv MAX_BULLETS 10
-.eqv BULLET_RATE 10 # in frames
+# The time in frames between shots
+.eqv PLAYER_SHOT_WAIT_TIME 10 # in frames
+# The number of pixels the bullet moves a frame
+.eqv BULLET_MOVEMENT_SPEED 1
 
-.eqv PLAYER_FIRE_RATE 2
+.eqv ENEMY_COUNT 20
+.eqv ENEMY_PER_ROW 5
+.eqv ENEMY_PER_COL 4
+.eqv ENEMY_ROW_SPACING 10
+.eqv ENEMY_COL_SPACING 7
+
+.eqv ENEMY_MOVEMENT_SPEED 10 # in frames
 
 .data
 # don't get rid of these, they're used by wait_for_next_frame.
@@ -29,6 +38,12 @@ bullet_x: 		.byte 0:MAX_BULLETS
 bullet_y: 		.byte 0:MAX_BULLETS
 bullet_active: 	.byte 0:MAX_BULLETS
 
+enemy_x:	.word 4
+enemy_y:	.word 5
+enemy_active: 	.byte 1:ENEMY_COUNT
+enemy_direction: .word 1
+enemy_last_moved: .word 0
+
 .text
 # --------------------------------------------------------------------------------------------------
 
@@ -42,16 +57,17 @@ _main_loop:
 	jal move_player
 	jal check_if_firing
 
+	# move bullets
+	jal move_bullets
+
+
 	# draw everything,
 	jal draw_player
 	jal draw_player_lives
 	jal draw_bullets_lefts
 	jal draw_bullets
-
-	# move bullets
-	jal move_bullets
-
-
+	jal draw_enemies
+	jal move_enemies
 	# then draw everything.
 	jal display_update_and_clear
 	jal	wait_for_next_frame
@@ -102,8 +118,8 @@ enter
 	lw t1, frame_counter
 	sub t0 t1 t0
 
-	# attempt to fire bullet if frames since last fire is more than BULLET_RATE
-	blt t0, BULLET_RATE, _finish_check_if_firing
+	# attempt to fire bullet if frames since last fire is more than PLAYER_SHOT_WAIT_TIME
+	blt t0, PLAYER_SHOT_WAIT_TIME, _finish_check_if_firing
 	sw t1, player_bullet_last_fired
 
 	jal fire_bullet
@@ -179,16 +195,13 @@ enter s0
 
 		_move_bullet_up:
 		lbu t1 bullet_y(s0)
-		dec t1
+		sub t1 t1 BULLET_MOVEMENT_SPEED
 
 		blt t1 0 _delete_bullet
 		sb t1 bullet_y(s0)
 		b _do_not_delete_bullet
 
 		_delete_bullet:
-		li t5 30
-		print_int t5
-		print_char '\n'
 		sb zero bullet_active(s0)
 
 		_do_not_delete_bullet:
@@ -264,3 +277,113 @@ enter s0, s1
 		b _draw_bullets_main_loop
 	_finish_draw_bullets_loop:
 leave s0, s1
+
+draw_enemies:
+enter s0 s1 s2 s3
+	li s0, 0
+	lw s2, enemy_x
+	lw s3, enemy_y
+	_draw_enemies_row_main_loop:
+		bge s0  ENEMY_PER_ROW _finish_draw_enemies_row
+	_draw_enemies_row_loop:
+		li, s1, 0
+		_draw_enemies_col_main_loop:
+			bge s1 ENEMY_PER_COL _finish_draw_enemies_col_loop
+		_draw_enemies_col_loop:
+			lw a0 enemy_x
+			lw a1 enemy_y
+
+			mul t0 s0, ENEMY_ROW_SPACING
+
+			mul t1 s1 ENEMY_COL_SPACING
+
+			add a0 a0 t0
+			add a1 a1 t1
+
+			la a2 enemy_image
+			jal display_blit_5x5
+			inc s1
+			b _draw_enemies_col_main_loop
+		_finish_draw_enemies_col_loop:
+		inc s0
+		b _draw_enemies_row_main_loop
+	_finish_draw_enemies_row:
+leave s0 s1 s2 s3
+
+move_enemies:
+enter
+	# Welcome to probably the most complicated function of the project
+
+	# check frames since last moved
+	lw t3 enemy_last_moved
+	lw t4 frame_counter
+	sub t3 t4 t3 # t3 : time since last moved
+	blt t3 ENEMY_MOVEMENT_SPEED, _dont_move_enemies
+	sw t4 enemy_last_moved
+
+
+	lw t0 enemy_x
+	# Determine if we must change the direction of the fleet:
+
+	# Rightmost ship's x coordinate will be at
+	# enemy_x + 5 + ENEMY_ROW_SPACING(ENEMY_PER_ROW-1)
+	# but, have to minus 5 pixels to account for the fact that
+	# they will be displayed 5 pixels more, because display_blit_5x5
+	# draws top left
+	li t1 ENEMY_PER_ROW
+	dec t1
+	mul t1 t1 ENEMY_ROW_SPACING
+	add t1 t1 t0
+
+	lw t2 enemy_direction
+	# t1 has the x coordinate of rightmost ship
+	# if the ship should change direction, it moves down first and
+	# then goes the other way
+
+	bne t2 1 _check_if_enemy_touching_left_side
+	bgt t1 PLAYER_X_UBOUND, _move_e_down
+	_check_if_enemy_touching_left_side:
+	bne t2 -1 _skip_enemy_side_check
+	blt t0 PLAYER_X_LBOUND, _move_e_down
+
+	_skip_enemy_side_check:
+	# determine the direction to go
+	# -1 left, 1 right
+
+	beq t2, 1, _move_e_right
+	_move_e_left:
+	dec t0
+	b _finish_move_e
+
+	_move_e_right:
+	inc t0
+
+	_finish_move_e:
+	sw t0 enemy_x
+	b _dont_move_enemies
+
+	_move_e_down:
+	# have to calculate the lower most thing, and only move down
+	# if its bounds
+
+	# ENEMY_Y + 5 + ENEMY_COL_SPACING(ENEMY_PER_COL-1)
+	# is bottom ship row's pixel
+
+	lw t0 enemy_y
+	li t1, ENEMY_PER_ROW
+	dec t1
+	mul t1 t1 ENEMY_COL_SPACING
+	add t1, t1, 5
+	add t1 t1 t0
+
+	bgt t1 PLAYER_Y_UBOUND _its_not_okay_to_move_enemy_down
+
+	_its_okay_to_move_enemy_down:
+	inc t0
+	sw t0 enemy_y
+	_its_not_okay_to_move_enemy_down:
+	mul t2, t2, -1
+	sw t2 enemy_direction
+
+	_dont_move_enemies:
+leave
