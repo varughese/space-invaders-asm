@@ -5,14 +5,9 @@
 .include "display.asm"
 .include "images.asm"
 .include "movement.asm"
+.include "bullets.asm"
 
 .eqv GAME_TICK_MS      16
-
-.eqv MAX_BULLETS 10
-# The time in frames between shots
-.eqv PLAYER_SHOT_WAIT_TIME 10 # in frames
-# The number of pixels the bullet moves a frame
-.eqv BULLET_MOVEMENT_SPEED 1
 
 .eqv ENEMY_COUNT 20
 .eqv ENEMY_PER_ROW 5
@@ -44,6 +39,13 @@ enemy_active: 	.byte 1:ENEMY_COUNT
 enemy_direction: .word 1
 enemy_last_moved: .word 0
 
+.eqv ENEMY_BULLET_COUNT 5
+enemy_bullets: .byte 0:ENEMY_BULLET_COUNT
+enemy_bullets_active: .byte 0:ENEMY_BULLET_COUNT
+enemy_bullet_x: .byte 0:ENEMY_BULLET_COUNT
+enemy_bullet_y: .byte 0:ENEMY_BULLET_COUNT
+
+
 .text
 # --------------------------------------------------------------------------------------------------
 
@@ -57,9 +59,11 @@ _main_loop:
 	jal move_player
 	jal check_if_firing
 
+	jal check_if_enemy_firing
+
 	# move bullets
 	jal move_bullets
-
+	jal move_enemies
 
 	# draw everything,
 	jal draw_player
@@ -67,7 +71,7 @@ _main_loop:
 	jal draw_bullets_lefts
 	jal draw_bullets
 	jal draw_enemies
-	jal move_enemies
+
 	# then draw everything.
 	jal display_update_and_clear
 	jal	wait_for_next_frame
@@ -104,118 +108,83 @@ leave	s0
 
 # .....and here's where all the rest of your code goes :D
 
-####### BULLETS
-check_if_firing:
+check_if_enemy_firing:
 enter
-	jal input_get_keys
-	and t0, v0, KEY_B # t0 = keys & KEY_B
-
-	bne t0, KEY_B, _finish_check_if_firing
-	# They clicked the B key:
-
-	# t0 = frames since last fire
-	lw t0, player_bullet_last_fired
-	lw t1, frame_counter
-	sub t0 t1 t0
-
-	# attempt to fire bullet if frames since last fire is more than PLAYER_SHOT_WAIT_TIME
-	blt t0, PLAYER_SHOT_WAIT_TIME, _finish_check_if_firing
-	sw t1, player_bullet_last_fired
-
-	jal fire_bullet
-
-	_finish_check_if_firing:
 leave
 
+check_if_bullet_hit_enemy:
+enter s0, s1, s2, s3
+# a0: bullet x
+# a1: bullet y
+# a3: bullet pos
+# kills enemy
 
-fire_bullet:
-enter s0
-	jal find_active_bullet
-	move s0 v0
+	li s0, 0
+	li s1, 0
+	li s2, 0
+	move a3, s3
+	_checkbullet_hit_enemies_row_main_loop:
+		bge s0  ENEMY_PER_ROW _finish_checkbullet_hit_enemies_row
+	_checkbullet_hit_enemies_row_loop:
+		li, s1, 0
+		_checkbullet_hit_enemies_col_main_loop:
+			bge s1 ENEMY_PER_COL _finish_checkbullet_hit_enemies_col_loop
+		_checkbullet_hit_enemies_col_loop:
+			lb t0 enemy_active(s2)
+			beq t0 0 _do_not_kill_enemy_and_bullet
 
-	bge s0 MAX_BULLETS _end_firebullet
+			lw a2 enemy_x
+			lw a3 enemy_y
 
-	lw t0 player_x
-	lw t1 player_y
+			mul t0 s0, ENEMY_ROW_SPACING
+			mul t1 s1 ENEMY_COL_SPACING
 
-	la t2 bullet_x
-	add t2, t2, s0
+			add a2 a2 t0
+			add a3 a3 t1
 
-	add t0, t0, 2 # to make it shoot from the center
-	sb t0, (t2)
+			li v0 0
+			jal check_if_bullet_in_hitbox
+			beq v0 0 _do_not_kill_enemy_and_bullet
+			sb zero enemy_active(s2)
+			sb zero bullet_active(s3)
+			_do_not_kill_enemy_and_bullet:
+			inc s1
+			inc s2
 
-	la t2 bullet_y
-	add t2, t2, s0
-	sb t1, (t2)
+			b _checkbullet_hit_enemies_col_main_loop
+		_finish_checkbullet_hit_enemies_col_loop:
+		inc s0
+		b _checkbullet_hit_enemies_row_main_loop
+	_finish_checkbullet_hit_enemies_row:
+leave s0, s1, s2, s3
 
-	li t0 1
-	la t1 bullet_active
-	add t1, t1, s0
-	sb t0 (t1)
-
-	# Decrement bullets left and exit game if none left
-	lw t1 player_bullets_left
-	dec t1
-	ble t1, 0, _game_over
-	sw t1 player_bullets_left
-
-	_end_firebullet:
-leave s0
-
-find_active_bullet:
+check_if_bullet_in_hitbox:
 enter
-	li t0 0
-	_main_loop_findactivebullet:
-		bgt t0, MAX_BULLETS _end_findactivebullet
-	_loop_findactivebullet:
-		# bullet_active [i]
-		la t1, bullet_active
-		add t1, t1, t0
-		lbu t2, (t1)
+	# (a0, a1, a2, a3)
+	# a0 - x of bullet
+	# a1 - y of bullet
+	# a2 - x of hitbox (assuming 5 x 5)
+	# a3 - y of hitbox
+	# return 1 if true, 0 if not
 
-		beq t2, 0, _end_findactivebullet
+	# (a2 <= a0 <= a2 + 5) &&
+	# (a3 <= a1 <= a3 + 5)
 
-		inc t0
-		b _main_loop_findactivebullet
-	_end_findactivebullet:
-		move v0, t0
+	add t0 a2 5
+	add t1 a3 5
+
+	blt a0 a2 _not_in_hitbox
+	blt t0 a0 _not_in_hitbox
+	blt a1 a3 _not_in_hitbox
+	blt t1 a1 _not_in_hitbox
+
+	li v0 1
+	b _finish_check_if_bullet_in_hitbox
+
+	_not_in_hitbox:
+	li v0 0
+	_finish_check_if_bullet_in_hitbox:
 leave
-
-move_bullets:
-enter s0
-	li s0 0
-	_main_loop_movebullets:
-		bge s0, MAX_BULLETS _end_movebullets
-	_loop_movebullets:
-		lb t0 bullet_active(s0)
-
-		bne t0 0, _move_bullet_up
-		inc s0
-		b _main_loop_movebullets
-
-		_move_bullet_up:
-		lbu t1 bullet_y(s0)
-		sub t1 t1 BULLET_MOVEMENT_SPEED
-
-		blt t1 0 _delete_bullet
-		sb t1 bullet_y(s0)
-		b _do_not_delete_bullet
-
-		_delete_bullet:
-		sb zero bullet_active(s0)
-
-		_do_not_delete_bullet:
-		inc s0
-		b _main_loop_movebullets
-
-
-	_end_movebullets:
-leave s0
-
-####### END BULLETS
-
-#
-
 
 ############## DRAWING
 
@@ -231,7 +200,7 @@ draw_player_lives:
 enter s0, s1, s2, s3
 	lw s0, player_lives
 	li s1, 0 # incrementer, i=0
-	li s2, 57 # rightmost x pos of heart
+	li s2, PLAYER_X_UBOUND # rightmost x pos of heart
 	li s3, 58 # y pos of heart
 	_draw_lives_loop:
 		mul t0, s1, 7
@@ -251,8 +220,7 @@ leave s0, s1, s2, s3
 
 draw_bullets_lefts:
 enter
-	# TODO: move these and 0, 57, 58 into constants
-	li a0 2
+	li a0 PLAYER_X_LBOUND
 	li a1 58
 	lw a2 player_bullets_left
 	jal display_draw_int
@@ -281,8 +249,7 @@ leave s0, s1
 draw_enemies:
 enter s0 s1 s2 s3
 	li s0, 0
-	lw s2, enemy_x
-	lw s3, enemy_y
+	li s2, 0
 	_draw_enemies_row_main_loop:
 		bge s0  ENEMY_PER_ROW _finish_draw_enemies_row
 	_draw_enemies_row_loop:
@@ -290,6 +257,9 @@ enter s0 s1 s2 s3
 		_draw_enemies_col_main_loop:
 			bge s1 ENEMY_PER_COL _finish_draw_enemies_col_loop
 		_draw_enemies_col_loop:
+			lb t0 enemy_active(s2)
+			beq t0 0 _enemy_is_dead_dont_draw
+
 			lw a0 enemy_x
 			lw a1 enemy_y
 
@@ -302,7 +272,10 @@ enter s0 s1 s2 s3
 
 			la a2 enemy_image
 			jal display_blit_5x5
+			_enemy_is_dead_dont_draw:
 			inc s1
+			inc s2
+
 			b _draw_enemies_col_main_loop
 		_finish_draw_enemies_col_loop:
 		inc s0
@@ -313,6 +286,16 @@ leave s0 s1 s2 s3
 move_enemies:
 enter
 	# Welcome to probably the most complicated function of the project
+	# Not really that complicated though, it only is long because its assembly
+
+	# Basically, first checks if should move based on frame frame_counter
+	# Then does some calculation to find where rightmost edge of the enemies
+	# currently is.
+	# If moving right && touching right bound, it moves down
+	# IF moving left && touching left bound, it moves down
+	# Otherwise, it moves in the same direction
+	# If it moves down, then it moves down and it switches the direction
+
 
 	# check frames since last moved
 	lw t3 enemy_last_moved
@@ -334,7 +317,6 @@ enter
 	dec t1
 	mul t1 t1 ENEMY_ROW_SPACING
 	add t1 t1 t0
-
 	lw t2 enemy_direction
 	# t1 has the x coordinate of rightmost ship
 	# if the ship should change direction, it moves down first and
