@@ -4,9 +4,58 @@
 # The number of pixels the bullet moves a frame
 .eqv BULLET_MOVEMENT_SPEED 1
 
-.text
+.eqv ENEMY_BULLET_COUNT 5
+.eqv ENEMY_SHOT_WAIT_TIME 90
 
-####### BULLETS
+.data
+enemy_last_shot: .word 0
+
+.text
+####### ENEMY BULLETS
+check_if_enemy_firing:
+enter
+	# t0 = frames since last enemy shot
+	lw t0, enemy_last_shot
+	lw t1, frame_counter
+	sub t0 t1 t0
+
+	# shoot if frame is below
+	blt t0, ENEMY_SHOT_WAIT_TIME, _finish_check_if_enemy_firing
+	sw t1, enemy_last_shot
+
+	jal fire_enemy_bullet
+
+	_finish_check_if_enemy_firing:
+leave
+
+fire_enemy_bullet:
+enter s0
+	la a0 enemy_bullet_active
+	li a1 ENEMY_BULLET_COUNT
+	jal find_active_bullet
+
+	move s0 v0
+
+	bge s0 ENEMY_BULLET_COUNT _end_fire_e_bullet
+
+	lw t0 enemy_x
+	lw t1 enemy_y
+
+	add t0 t0 2
+	add t1 t1 5
+
+	sb t0 enemy_bullet_x(s0)
+	sb t1 enemy_bullet_y(s0)
+
+	li t0 1
+	sb t0, enemy_bullet_active(s0)
+
+	_end_fire_e_bullet:
+leave s0
+
+##########
+
+####### PLAYER BULLETS
 check_if_firing:
 enter
 	jal input_get_keys
@@ -32,6 +81,8 @@ leave
 
 fire_bullet:
 enter s0
+	la a0 bullet_active
+	li a1 MAX_BULLETS
 	jal find_active_bullet
 	move s0 v0
 
@@ -66,12 +117,14 @@ leave s0
 
 find_active_bullet:
 enter
+	# a0 : address of bullet array
+	# a1 : bullet array length
 	li t0 0
 	_main_loop_findactivebullet:
-		bgt t0, MAX_BULLETS _end_findactivebullet
+		bgt t0, a1 _end_findactivebullet
 	_loop_findactivebullet:
 		# bullet_active [i]
-		la t1, bullet_active
+		move t1, a0
 		add t1, t1, t0
 		lbu t2, (t1)
 
@@ -83,7 +136,39 @@ enter
 		move v0, t0
 leave
 
-move_bullets:
+move_enemy_bullets:
+enter s0
+	li s0 0
+	_main_loop_move_e_bullets:
+		bge s0, ENEMY_BULLET_COUNT _end_move_e_bullets
+	_loop_move_e_bullets:
+		lb t0 enemy_bullet_active(s0)
+
+		bne t0 0, _move_bullet_down
+		inc s0
+		b _main_loop_move_e_bullets
+
+		_move_bullet_down:
+		lbu t1 enemy_bullet_y(s0)
+		add t1 t1 BULLET_MOVEMENT_SPEED
+
+		bge t1 64 _delete_e_bullet
+		sb t1 enemy_bullet_y(s0)
+
+		b _do_not_delete_e_bullet
+
+		_delete_e_bullet:
+		sb zero enemy_bullet_active(s0)
+
+		_do_not_delete_e_bullet:
+		inc s0
+		b _main_loop_move_e_bullets
+
+
+	_end_move_e_bullets:
+leave s0
+
+move_player_bullets:
 enter s0
 	li s0 0
 	_main_loop_movebullets:

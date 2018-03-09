@@ -6,14 +6,9 @@
 .include "images.asm"
 .include "movement.asm"
 .include "bullets.asm"
+.include "drawing.asm"
 
 .eqv GAME_TICK_MS      16
-
-.eqv ENEMY_COUNT 20
-.eqv ENEMY_PER_ROW 5
-.eqv ENEMY_PER_COL 4
-.eqv ENEMY_ROW_SPACING 10
-.eqv ENEMY_COL_SPACING 7
 
 .eqv ENEMY_MOVEMENT_SPEED 10 # in frames
 
@@ -39,9 +34,8 @@ enemy_active: 	.byte 1:ENEMY_COUNT
 enemy_direction: .word 1
 enemy_last_moved: .word 0
 
-.eqv ENEMY_BULLET_COUNT 5
-enemy_bullets: .byte 0:ENEMY_BULLET_COUNT
-enemy_bullets_active: .byte 0:ENEMY_BULLET_COUNT
+
+enemy_bullet_active: .byte 0:ENEMY_BULLET_COUNT
 enemy_bullet_x: .byte 0:ENEMY_BULLET_COUNT
 enemy_bullet_y: .byte 0:ENEMY_BULLET_COUNT
 
@@ -58,21 +52,22 @@ _main_loop:
 	# check for input,
 	jal move_player
 	jal check_if_firing
-
 	jal check_if_enemy_firing
 
 	# move bullets
-	jal move_bullets
+	jal move_player_bullets
+	jal move_enemy_bullets
 	jal move_enemies
 
 	# draw everything,
 	jal draw_player
 	jal draw_player_lives
 	jal draw_bullets_lefts
-	jal draw_bullets
+	jal draw_player_bullets
 	jal draw_enemies
+	jal draw_enemy_bullets
 
-	# then draw everything.
+	# restart frame
 	jal display_update_and_clear
 	jal	wait_for_next_frame
 	b	_main_loop
@@ -107,10 +102,6 @@ leave	s0
 # --------------------------------------------------------------------------------------------------
 
 # .....and here's where all the rest of your code goes :D
-
-check_if_enemy_firing:
-enter
-leave
 
 check_if_bullet_hit_enemy:
 enter s0, s1, s2, s3
@@ -185,103 +176,6 @@ enter
 	li v0 0
 	_finish_check_if_bullet_in_hitbox:
 leave
-
-############## DRAWING
-
-draw_player:
-enter
-	lw a0, player_x
-	lw a1, player_y
-	la a2, player_image
-	jal display_blit_5x5
-leave
-
-draw_player_lives:
-enter s0, s1, s2, s3
-	lw s0, player_lives
-	li s1, 0 # incrementer, i=0
-	li s2, PLAYER_X_UBOUND # rightmost x pos of heart
-	li s3, 58 # y pos of heart
-	_draw_lives_loop:
-		mul t0, s1, 7
-		sub t0, s2, t0
-
-		move a0, t0
-		move a1, s3
-		la a2 player_life_image
-		jal display_blit_5x5
-
-		# i++
-		inc s1
-		bge s1 s0 _finish_draw_lives_loop
-		b _draw_lives_loop
-	_finish_draw_lives_loop:
-leave s0, s1, s2, s3
-
-draw_bullets_lefts:
-enter
-	li a0 PLAYER_X_LBOUND
-	li a1 58
-	lw a2 player_bullets_left
-	jal display_draw_int
-leave
-
-draw_bullets:
-enter s0, s1
-	li s0, 0
-	_draw_bullets_main_loop:
-		bge s0 MAX_BULLETS _finish_draw_bullets_loop
-	_draw_bullets_loop:
-		lb t0 bullet_active(s0)
-		beq t0 0, _skip_draw_bullet
-
-		lbu	a0, bullet_x(s0)
-		lbu	a1, bullet_y(s0)
-		li	a2, COLOR_WHITE
-		jal	display_set_pixel
-
-		_skip_draw_bullet:
-		inc s0
-		b _draw_bullets_main_loop
-	_finish_draw_bullets_loop:
-leave s0, s1
-
-draw_enemies:
-enter s0 s1 s2 s3
-	li s0, 0
-	li s2, 0
-	_draw_enemies_row_main_loop:
-		bge s0  ENEMY_PER_ROW _finish_draw_enemies_row
-	_draw_enemies_row_loop:
-		li, s1, 0
-		_draw_enemies_col_main_loop:
-			bge s1 ENEMY_PER_COL _finish_draw_enemies_col_loop
-		_draw_enemies_col_loop:
-			lb t0 enemy_active(s2)
-			beq t0 0 _enemy_is_dead_dont_draw
-
-			lw a0 enemy_x
-			lw a1 enemy_y
-
-			mul t0 s0, ENEMY_ROW_SPACING
-
-			mul t1 s1 ENEMY_COL_SPACING
-
-			add a0 a0 t0
-			add a1 a1 t1
-
-			la a2 enemy_image
-			jal display_blit_5x5
-			_enemy_is_dead_dont_draw:
-			inc s1
-			inc s2
-
-			b _draw_enemies_col_main_loop
-		_finish_draw_enemies_col_loop:
-		inc s0
-		b _draw_enemies_row_main_loop
-	_finish_draw_enemies_row:
-leave s0 s1 s2 s3
 
 move_enemies:
 enter
