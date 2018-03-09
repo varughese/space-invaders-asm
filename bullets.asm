@@ -5,7 +5,13 @@
 .eqv BULLET_MOVEMENT_SPEED 1
 
 .eqv ENEMY_BULLET_COUNT 5
-.eqv ENEMY_SHOT_WAIT_TIME 90
+.eqv ENEMY_SHOT_WAIT_TIME 6
+
+.eqv ENEMY_COUNT 20
+.eqv ENEMY_PER_ROW 5
+.eqv ENEMY_PER_COL 4
+.eqv ENEMY_ROW_SPACING 10
+.eqv ENEMY_COL_SPACING 7
 
 .data
 enemy_last_shot: .word 0
@@ -38,8 +44,34 @@ enter s0
 
 	bge s0 ENEMY_BULLET_COUNT _end_fire_e_bullet
 
+	lw t0 enemy_kill_count
+	li t1 ENEMY_COUNT
+	sub t0 t1 t0
+	ble t0 1 _end_fire_e_bullet
+
+	jal get_rand_alive_enemy
+	# x--;
+	# if(x >= 5) {
+	# i = x / 5;
+	# j = x % 5
+	# }
+
+	li t3 0
+	move t4 v0
+
+	blt v0 5 _skip_the_division
+	div t3 v0 5
+	rem t4 v0 5
+	_skip_the_division:
+
 	lw t0 enemy_x
 	lw t1 enemy_y
+
+	mul t5 t3, ENEMY_ROW_SPACING
+	mul t6 t4 ENEMY_COL_SPACING
+
+	add t0 t0 t5
+	add t1 t1 t6
 
 	add t0 t0 2
 	add t1 t1 5
@@ -52,6 +84,22 @@ enter s0
 
 	_end_fire_e_bullet:
 leave s0
+
+get_rand_alive_enemy:
+enter
+	# GEN RANDOM NUMBER [0, ENEMY_COUNT]
+	_get_rand_alive_enemy_loop_top:
+	li v0 sys_randRange
+	li a1 ENEMY_COUNT
+	dec a1
+	syscall
+	lbu t0 enemy_active(a0)
+	beq t0 0 _get_rand_alive_enemy_loop_top
+	_get_rand_alive_enemy_loop_finish:
+	move v0 a0
+leave
+
+
 
 ##########
 

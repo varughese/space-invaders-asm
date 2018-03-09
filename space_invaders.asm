@@ -33,7 +33,7 @@ enemy_y:	.word 5
 enemy_active: 	.byte 1:ENEMY_COUNT
 enemy_direction: .word 1
 enemy_last_moved: .word 0
-
+enemy_kill_count: .word 0
 
 enemy_bullet_active: .byte 0:ENEMY_BULLET_COUNT
 enemy_bullet_x: .byte 0:ENEMY_BULLET_COUNT
