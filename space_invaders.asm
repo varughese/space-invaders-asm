@@ -52,12 +52,13 @@ _main_loop:
 	# check for input,
 	jal move_player
 	jal check_if_firing
-	jal check_if_enemy_firing
 
 	# move bullets
 	jal move_player_bullets
 	jal move_enemy_bullets
 	jal move_enemies
+
+	jal check_if_enemy_firing
 
 	# draw everything,
 	jal draw_player
@@ -66,6 +67,7 @@ _main_loop:
 	jal draw_player_bullets
 	jal draw_enemies
 	jal draw_enemy_bullets
+	jal TEST_FN_draw_active_enemy
 
 	# restart frame
 	jal display_update_and_clear
@@ -127,8 +129,8 @@ enter s0, s1, s2, s3
 			lw a2 enemy_x
 			lw a3 enemy_y
 
-			mul t0 s0, ENEMY_ROW_SPACING
-			mul t1 s1 ENEMY_COL_SPACING
+			mul t0 s0, ENEMY_COL_SPACING
+			mul t1 s1 ENEMY_ROW_SPACING
 
 			add a2 a2 t0
 			add a3 a3 t1
@@ -203,13 +205,13 @@ enter
 	# Determine if we must change the direction of the fleet:
 
 	# Rightmost ship's x coordinate will be at
-	# enemy_x + 5 + ENEMY_ROW_SPACING(ENEMY_PER_ROW-1)
+	# enemy_x + 5 + ENEMY_COL_SPACING(ENEMY_PER_ROW-1)
 	# but, have to minus 5 pixels to account for the fact that
 	# they will be displayed 5 pixels more, because display_blit_5x5
 	# draws top left
 	li t1 ENEMY_PER_ROW
 	dec t1
-	mul t1 t1 ENEMY_ROW_SPACING
+	mul t1 t1 ENEMY_COL_SPACING
 	add t1 t1 t0
 	lw t2 enemy_direction
 	# t1 has the x coordinate of rightmost ship
@@ -242,13 +244,13 @@ enter
 	# have to calculate the lower most thing, and only move down
 	# if its bounds
 
-	# ENEMY_Y + 5 + ENEMY_COL_SPACING(ENEMY_PER_COL-1)
+	# ENEMY_Y + 5 + ENEMY_ROW_SPACING(ENEMY_PER_COL-1)
 	# is bottom ship row's pixel
 
 	lw t0 enemy_y
 	li t1, ENEMY_PER_ROW
 	dec t1
-	mul t1 t1 ENEMY_COL_SPACING
+	mul t1 t1 ENEMY_ROW_SPACING
 	add t1, t1, 5
 	add t1 t1 t0
 

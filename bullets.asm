@@ -5,13 +5,13 @@
 .eqv BULLET_MOVEMENT_SPEED 1
 
 .eqv ENEMY_BULLET_COUNT 5
-.eqv ENEMY_SHOT_WAIT_TIME 6
+.eqv ENEMY_SHOT_WAIT_TIME 90
 
 .eqv ENEMY_COUNT 20
 .eqv ENEMY_PER_ROW 5
 .eqv ENEMY_PER_COL 4
-.eqv ENEMY_ROW_SPACING 10
-.eqv ENEMY_COL_SPACING 7
+.eqv ENEMY_COL_SPACING 10 
+.eqv ENEMY_ROW_SPACING 7
 
 .data
 enemy_last_shot: .word 0
@@ -50,25 +50,23 @@ enter s0
 	ble t0 1 _end_fire_e_bullet
 
 	jal get_rand_alive_enemy
-	# x--;
-	# if(x >= 5) {
-	# i = x / 5;
-	# j = x % 5
-	# }
-
-	li t3 0
-	move t4 v0
-
-	blt v0 5 _skip_the_division
-	div t3 v0 5
-	rem t4 v0 5
-	_skip_the_division:
 
 	lw t0 enemy_x
 	lw t1 enemy_y
 
-	mul t5 t3, ENEMY_ROW_SPACING
-	mul t6 t4 ENEMY_COL_SPACING
+	# v0 = row_index
+	# v1 = col_index
+	move t7 v0
+	print_int v0
+	print_char ' '
+	print_int v1
+	print_char '\n'
+	move v0 t7
+
+	# t5 = x = enemy_x + ENEMY_COL_SPACING * col_index
+	# t6 = y = enemy_y + ENEMY_ROW_SPACING * row_index
+	mul t5 v1, ENEMY_COL_SPACING
+	mul t6 v0 ENEMY_ROW_SPACING
 
 	add t0 t0 t5
 	add t1 t1 t6
@@ -86,18 +84,32 @@ enter s0
 leave s0
 
 get_rand_alive_enemy:
-enter
-	# GEN RANDOM NUMBER [0, ENEMY_COUNT]
+enter s0, s1
+	# returns random alive enemy row and col
+	# enemy_index = 5*row + col
 	_get_rand_alive_enemy_loop_top:
+
+	# s0 = rand row [0,4] = col index
 	li v0 sys_randRange
-	li a1 ENEMY_COUNT
-	dec a1
+	li a1 ENEMY_PER_ROW
 	syscall
-	lbu t0 enemy_active(a0)
-	beq t0 0 _get_rand_alive_enemy_loop_top
+	move s0 a0
+
+	# s1 = rand col [0,3] = row index
+	li v0 sys_randRange
+	li a1 ENEMY_PER_COL
+	syscall
+	move s1 a0
+
+	mul t0 s1 ENEMY_PER_ROW
+	add t0 t0 s0
+
+	lbu t7 enemy_active(t0)
+	beq t7 0 _get_rand_alive_enemy_loop_top
 	_get_rand_alive_enemy_loop_finish:
-	move v0 a0
-leave
+	move v0 s1
+	move v1 s0
+leave s0, s1
 
 
 

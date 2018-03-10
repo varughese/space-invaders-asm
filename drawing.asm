@@ -111,9 +111,8 @@ enter s0 s1 s2 s3
 			lw a0 enemy_x
 			lw a1 enemy_y
 
-			mul t0 s0, ENEMY_ROW_SPACING
-
-			mul t1 s1 ENEMY_COL_SPACING
+			mul t0 s0, ENEMY_COL_SPACING
+			mul t1 s1 ENEMY_ROW_SPACING
 
 			add a0 a0 t0
 			add a1 a1 t1
@@ -130,3 +129,22 @@ enter s0 s1 s2 s3
 		b _draw_enemies_row_main_loop
 	_finish_draw_enemies_row:
 leave s0 s1 s2 s3
+
+TEST_FN_draw_active_enemy:
+enter s0
+	li s0, 0
+	_draw_active_enemy_loop_top:
+	bge s0 ENEMY_COUNT _draw_active_enemy_loop_finish
+	_draw_active_enemy_loop_body:
+	lbu t0 enemy_active(s0)
+	beq t0 0 _draw_active_enemy_loop_body_skip
+	move a0 s0
+	mul a0 a0 2
+	li a1 1
+	li a2 COLOR_WHITE
+	jal display_set_pixel
+	_draw_active_enemy_loop_body_skip:
+	inc s0
+	b _draw_active_enemy_loop_top
+	_draw_active_enemy_loop_finish:
+leave s0
