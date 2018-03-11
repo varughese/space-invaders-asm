@@ -62,6 +62,7 @@ _main_loop:
 
 game_over:
 enter
+	jal update_score
 	li t0 4
 	sw t0 sequence_no
 leave
@@ -205,16 +206,8 @@ enter
 	jal check_if_won
 leave
 
-reset_game:
+reset_enemies_and_bullets:
 enter s0
-	li t0 3
-	sw t0 player_lives
-
-	li t0 50
-	sw t0 player_bullets_left
-
-	sb zero player_invincible
-
 	li t0 4
 	li t1 5
 	sw t0 enemy_x
@@ -251,16 +244,48 @@ enter s0
 		inc s0
 		b _reset_e_bullet_loop_main
 	_reset_e_bullet_loop_finish:
+leave s0
 
+reset_game:
+enter s0
+	li t0 3
+	sw t0 player_lives
+
+	li t0 50
+	sw t0 player_bullets_left
+
+	sb zero player_invincible
+
+	jal reset_enemies_and_bullets
 leave s0
 
 check_if_won:
 enter
 	lw t0 enemy_kill_count
 	blt t0 ENEMY_COUNT _they_didnt_win
+	jal update_score
 	jal next_round
 	_they_didnt_win:
 leave
+
+update_score:
+enter s0
+	lw s0 score
+
+	lw t0 enemy_kill_count
+	lw t1 round_no
+	mul t0 t0 t1
+	add s0 s0 t0
+
+	lw t0 player_bullets_left
+	sub t0 t0 20
+	ble t0 0 _didnt_get_any_bullet_points
+	add s0 s0 t0
+
+	_didnt_get_any_bullet_points:
+	sw s0 score
+leave s0
+
 
 next_round:
 enter s0
@@ -276,7 +301,7 @@ enter s0
 	sw t0 round_no
 
 	lw s0 player_bullets_left
-	jal reset_game
+	jal reset_enemies_and_bullets
 
 	add s0 s0 10
 	sw s0 player_bullets_left
