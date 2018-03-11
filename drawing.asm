@@ -6,7 +6,20 @@ enter
 	lw a0, player_x
 	lw a1, player_y
 	la a2, player_image
+
+	lbu t0 player_invincible
+	beq t0 0 _draw_player
+	# player's invincble
+	lw t0 player_invincible_last_frame
+	# trick to make player flash every 4 frames
+	# when invincble
+	lw t1 frame_counter
+	sub t0 t1 t0
+	and t0 t0 4
+	beq t0 0 _draw_player_finish
+	_draw_player:
 	jal display_blit_5x5
+	_draw_player_finish:
 leave
 
 draw_player_lives:
@@ -15,6 +28,8 @@ enter s0, s1, s2, s3
 	li s1, 0 # incrementer, i=0
 	li s2, PLAYER_X_UBOUND # rightmost x pos of heart
 	li s3, 58 # y pos of heart
+	_draw_lives_loop_top:
+		bge s1 s0 _finish_draw_lives_loop
 	_draw_lives_loop:
 		mul t0, s1, 7
 		sub t0, s2, t0
@@ -26,8 +41,7 @@ enter s0, s1, s2, s3
 
 		# i++
 		inc s1
-		bge s1 s0 _finish_draw_lives_loop
-		b _draw_lives_loop
+		b _draw_lives_loop_top
 	_finish_draw_lives_loop:
 leave s0, s1, s2, s3
 
@@ -41,7 +55,7 @@ leave
 
 draw_player_bullets:
 enter
-	li a0 MAX_BULLETS
+	li a0 PLAYER_BULLET_COUNT
 	la a1 bullet_active
 	la a2 bullet_x
 	la a3 bullet_y
@@ -98,6 +112,7 @@ draw_enemies:
 enter s0 s1 s2 s3
 	li s0, 0
 	li s2, 0
+	# draws top to bottom, left to right
 	_draw_enemies_row_main_loop:
 		bge s0  ENEMY_PER_ROW _finish_draw_enemies_row
 	_draw_enemies_row_loop:

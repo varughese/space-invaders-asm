@@ -5,8 +5,10 @@
 .eqv PLAYER_Y_LBOUND	46
 .eqv PLAYER_Y_UBOUND	52
 
+.eqv ENEMY_MOVEMENT_SPEED 10 # in frames
+
 .text
-###### MOVEMENT
+###### PLAYER MOVEMENT
 move_player:
 enter
 	jal input_get_keys
@@ -93,4 +95,91 @@ enter
 	_finish:
 leave
 
-############## END MOVEMENT
+############## END PLAYER MOVEMENT
+
+move_enemies:
+enter
+	# Welcome to probably the most complicated function of the project
+	# Not really that complicated though, it only is long because its assembly
+
+	# Basically, first checks if should move based on frame frame_counter
+	# Then does some calculation to find where rightmost edge of the enemies
+	# currently is.
+	# If moving right && touching right bound, it moves down
+	# IF moving left && touching left bound, it moves down
+	# Otherwise, it moves in the same direction
+	# If it moves down, then it moves down and it switches the direction
+
+
+	# check frames since last moved
+	lw t3 enemy_last_moved
+	lw t4 frame_counter
+	sub t3 t4 t3 # t3 : time since last moved
+	blt t3 ENEMY_MOVEMENT_SPEED, _dont_move_enemies
+	sw t4 enemy_last_moved
+
+
+	lw t0 enemy_x
+	# Determine if we must change the direction of the fleet:
+
+	# Rightmost ship's x coordinate will be at
+	# enemy_x + 5 + ENEMY_COL_SPACING(ENEMY_PER_ROW-1)
+	# but, have to minus 5 pixels to account for the fact that
+	# they will be displayed 5 pixels more, because display_blit_5x5
+	# draws top left
+	li t1 ENEMY_PER_ROW
+	dec t1
+	mul t1 t1 ENEMY_COL_SPACING
+	add t1 t1 t0
+	lw t2 enemy_direction
+	# t1 has the x coordinate of rightmost ship
+	# if the ship should change direction, it moves down first and
+	# then goes the other way
+
+	bne t2 1 _check_if_enemy_touching_left_side
+	bgt t1 PLAYER_X_UBOUND, _move_e_down
+	_check_if_enemy_touching_left_side:
+	bne t2 -1 _skip_enemy_side_check
+	blt t0 PLAYER_X_LBOUND, _move_e_down
+
+	_skip_enemy_side_check:
+	# determine the direction to go
+	# -1 left, 1 right
+
+	beq t2, 1, _move_e_right
+	_move_e_left:
+	dec t0
+	b _finish_move_e
+
+	_move_e_right:
+	inc t0
+
+	_finish_move_e:
+	sw t0 enemy_x
+	b _dont_move_enemies
+
+	_move_e_down:
+	# have to calculate the lower most thing, and only move down
+	# if its bounds
+
+	# ENEMY_Y + 5 + ENEMY_ROW_SPACING(ENEMY_PER_COL-1)
+	# is bottom ship row's pixel
+
+	lw t0 enemy_y
+	li t1, ENEMY_PER_ROW
+	dec t1
+	mul t1 t1 ENEMY_ROW_SPACING
+	add t1, t1, 5
+	add t1 t1 t0
+
+	bgt t1 PLAYER_Y_UBOUND _its_not_okay_to_move_enemy_down
+
+	_its_okay_to_move_enemy_down:
+	inc t0
+	sw t0 enemy_y
+	_its_not_okay_to_move_enemy_down:
+	mul t2, t2, -1
+	sw t2 enemy_direction
+
+	_dont_move_enemies:
+leave

@@ -1,20 +1,27 @@
-.eqv MAX_BULLETS 10
+.eqv PLAYER_BULLET_COUNT 10
 # The time in frames between shots
 .eqv PLAYER_SHOT_WAIT_TIME 10 # in frames
 # The number of pixels the bullet moves a frame
 .eqv BULLET_MOVEMENT_SPEED 1
 
 .eqv ENEMY_BULLET_COUNT 5
-.eqv ENEMY_SHOT_WAIT_TIME 90
+.eqv ENEMY_SHOT_WAIT_TIME 10
 
 .eqv ENEMY_COUNT 20
 .eqv ENEMY_PER_ROW 5
 .eqv ENEMY_PER_COL 4
-.eqv ENEMY_COL_SPACING 10 
+.eqv ENEMY_COL_SPACING 10
 .eqv ENEMY_ROW_SPACING 7
 
 .data
+bullet_x: 		.byte 0:PLAYER_BULLET_COUNT
+bullet_y: 		.byte 0:PLAYER_BULLET_COUNT
+bullet_active: 	.byte 0:PLAYER_BULLET_COUNT
+
 enemy_last_shot: .word 0
+enemy_bullet_active: .byte 0:ENEMY_BULLET_COUNT
+enemy_bullet_x: .byte 0:ENEMY_BULLET_COUNT
+enemy_bullet_y: .byte 0:ENEMY_BULLET_COUNT
 
 .text
 ####### ENEMY BULLETS
@@ -56,12 +63,6 @@ enter s0
 
 	# v0 = row_index
 	# v1 = col_index
-	move t7 v0
-	print_int v0
-	print_char ' '
-	print_int v1
-	print_char '\n'
-	move v0 t7
 
 	# t5 = x = enemy_x + ENEMY_COL_SPACING * col_index
 	# t6 = y = enemy_y + ENEMY_ROW_SPACING * row_index
@@ -86,7 +87,7 @@ leave s0
 get_rand_alive_enemy:
 enter s0, s1
 	# returns random alive enemy row and col
-	# enemy_index = 5*row + col
+	# enemy_index = ENEMY_PER_COL*col + row
 	_get_rand_alive_enemy_loop_top:
 
 	# s0 = rand row [0,4] = col index
@@ -101,8 +102,11 @@ enter s0, s1
 	syscall
 	move s1 a0
 
-	mul t0 s1 ENEMY_PER_ROW
-	add t0 t0 s0
+	print_char 'a'
+	print_char '\n'
+
+	mul t0 s0 ENEMY_PER_COL
+	add t0 t0 s1
 
 	lbu t7 enemy_active(t0)
 	beq t7 0 _get_rand_alive_enemy_loop_top
@@ -133,20 +137,20 @@ enter
 	blt t0, PLAYER_SHOT_WAIT_TIME, _finish_check_if_firing
 	sw t1, player_bullet_last_fired
 
-	jal fire_bullet
+	jal fire_player_bullet
 
 	_finish_check_if_firing:
 leave
 
 
-fire_bullet:
+fire_player_bullet:
 enter s0
 	la a0 bullet_active
-	li a1 MAX_BULLETS
+	li a1 PLAYER_BULLET_COUNT
 	jal find_active_bullet
 	move s0 v0
 
-	bge s0 MAX_BULLETS _end_firebullet
+	bge s0 PLAYER_BULLET_COUNT _end_firebullet
 
 	lw t0 player_x
 	lw t1 player_y
@@ -215,6 +219,11 @@ enter s0
 		bge t1 64 _delete_e_bullet
 		sb t1 enemy_bullet_y(s0)
 
+		lbu a0 enemy_bullet_x(s0)
+		move a1 t1
+		move a2 s0
+		jal check_if_enemy_bullet_hit_player
+
 		b _do_not_delete_e_bullet
 
 		_delete_e_bullet:
@@ -232,7 +241,7 @@ move_player_bullets:
 enter s0
 	li s0 0
 	_main_loop_movebullets:
-		bge s0, MAX_BULLETS _end_movebullets
+		bge s0, PLAYER_BULLET_COUNT _end_movebullets
 	_loop_movebullets:
 		lb t0 bullet_active(s0)
 
