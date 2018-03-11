@@ -2,7 +2,7 @@
 # PLAYER
 player_x: .word 30
 player_y: .word 49
-player_lives: .word 7
+player_lives: .word 3
 player_bullets_left: .word 50
 player_bullet_last_fired: .word 0
 player_invincible_last_frame: .word 0

@@ -102,9 +102,6 @@ enter s0, s1
 	syscall
 	move s1 a0
 
-	print_char 'a'
-	print_char '\n'
-
 	mul t0 s0 ENEMY_PER_COL
 	add t0 t0 s1
 
@@ -170,11 +167,13 @@ enter s0
 	add t1, t1, s0
 	sb t0 (t1)
 
-	# Decrement bullets left and exit game if none left
+	# Decrement bullets left and game over if none left
 	lw t1 player_bullets_left
 	dec t1
-	ble t1, 0, _game_over
 	sw t1 player_bullets_left
+
+	bgt t1, 0, _end_firebullet
+	jal game_over
 
 	_end_firebullet:
 leave s0

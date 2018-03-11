@@ -37,6 +37,9 @@ enter s0, s1, s2, s3
 			beq v0 0 _do_not_kill_enemy_and_bullet
 			sb zero enemy_active(s2)
 			sb zero bullet_active(s3)
+			lw t0 enemy_kill_count
+			inc t0
+			sw t0 enemy_kill_count
 			_do_not_kill_enemy_and_bullet:
 			inc s1
 			inc s2
@@ -104,7 +107,7 @@ enter
 	sw t0 player_lives
 	## If no lives left, game over
 	bge t0 0 _turn_player_invincible
-	b _game_over
+	jal game_over
 	_turn_player_invincible:
 	lw t0 frame_counter
 	sw t0 player_invincible_last_frame
