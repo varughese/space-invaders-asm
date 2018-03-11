@@ -2,7 +2,7 @@
 intro_message_1: .asciiz "SPACE"
 intro_message_2: .asciiz "INVADERS"
 
-intro_message_3: .asciiz "Press B"
+intro_message_3: .asciiz "Press B!"
 
 round_message: .asciiz "Round"
 

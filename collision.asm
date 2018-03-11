@@ -35,11 +35,14 @@ enter s0, s1, s2, s3
 			li v0 0
 			jal check_if_bullet_in_hitbox
 			beq v0 0 _do_not_kill_enemy_and_bullet
+
+			# bullet hit enemy
 			sb zero enemy_active(s2)
 			sb zero bullet_active(s3)
 			lw t0 enemy_kill_count
 			inc t0
 			sw t0 enemy_kill_count
+
 			_do_not_kill_enemy_and_bullet:
 			inc s1
 			inc s2

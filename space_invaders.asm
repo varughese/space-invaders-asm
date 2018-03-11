@@ -28,11 +28,12 @@
 .data
 # Game is broken down into game "sequences"
 # Sequence number determines which "screen" to show
-# Sequence 0: game start screen
-# Sequence 1: current round screen
-# Sequence 2: actual game, paused
-# Sequence 3: actual game, in play
-# Sequence 4: game over
+# Sequence 0: Game Start screen
+# Sequence 1: Current Round screen
+# Sequence 2: Actual game, paused
+# Sequence 3: Actual game, in play
+# Sequence 4: Game Over
+
 sequence_no:	.word 0
 game_paused: .word 0
 round_no: 1
@@ -177,7 +178,7 @@ enter
 	jal check_if_firing
 
 	lw t0 sequence_no
-	beq t0 2 _finish_regular_game_functions
+	beq t0 2 _skip_to_paused_mode
 
 	# Move bullets and enemies
 	jal move_player_bullets
@@ -190,7 +191,7 @@ enter
 	# Check if player is invincble or has other powerups
 	jal check_player_modifications
 
-	_finish_regular_game_functions:
+	_skip_to_paused_mode:
 
 	# Draw everything,
 	jal draw_player
@@ -199,6 +200,9 @@ enter
 	jal draw_player_bullets
 	jal draw_enemies
 	jal draw_enemy_bullets
+
+	# update round if they won
+	jal check_if_won
 leave
 
 reset_game:
@@ -229,12 +233,51 @@ enter s0
 	sw zero enemy_kill_count
 
 	li s0 0
-	_reset_bullet_loop_main:
-		bge s0 PLAYER_BULLET_COUNT _reset_bullet_loop_finish
-	_reset_bullet_loop_body:
+	_reset_p_bullet_loop_main:
+		bge s0 PLAYER_BULLET_COUNT _reset_p_bullet_loop_finish
+	_reset_p_bullet_loop_body:
 		li t0 0
 		sb t0 bullet_active(s0)
 		inc s0
-		b _reset_bullet_loop_main
-	_reset_bullet_loop_finish:
+		b _reset_p_bullet_loop_main
+	_reset_p_bullet_loop_finish:
+
+	li s0 0
+	_reset_e_bullet_loop_main:
+		bge s0 ENEMY_BULLET_COUNT _reset_e_bullet_loop_finish
+	_reset_e_bullet_loop_body:
+		li t0 0
+		sb t0 enemy_bullet_active(s0)
+		inc s0
+		b _reset_e_bullet_loop_main
+	_reset_e_bullet_loop_finish:
+
+leave s0
+
+check_if_won:
+enter
+	lw t0 enemy_kill_count
+	blt t0 ENEMY_COUNT _they_didnt_win
+	jal next_round
+	_they_didnt_win:
+leave
+
+next_round:
+enter s0
+	li t0 1
+	sw t0 sequence_no
+
+	lw t1 frame_counter
+	add t1 t1 20
+	sw t1 last_round_screen_frame
+
+	lw t0 round_no
+	inc t0
+	sw t0 round_no
+
+	lw s0 player_bullets_left
+	jal reset_game
+
+	add s0 s0 10
+	sw s0 player_bullets_left
 leave s0
