@@ -20,7 +20,7 @@ draw_player:
 enter
 	lw a0, player_x
 	lw a1, player_y
-	la a2, player_image
+	la a2, player_sprite
 
 	lbu t0 player_invincible
 	beq t0 0 _draw_player
@@ -51,7 +51,7 @@ enter s0, s1, s2, s3
 
 		move a0, t0
 		move a1, s3
-		la a2 player_life_image
+		la a2 player_life_sprite
 		jal display_blit_5x5
 
 		# i++
@@ -147,7 +147,7 @@ enter s0, s1, s2, s3, s4, s5
 			add a0 a0 t0
 			add a1 a1 t1
 
-			la a2 enemy_image
+			la a2 enemy_sprite
 			beq t9 1 _dont_draw_explosion_sprite
 				move s4 a0
 				move s5 a1
@@ -156,7 +156,7 @@ enter s0, s1, s2, s3, s4, s5
 				jal handle_enemy_explosion_animation
 				move a0 s4
 				move a1 s5
-				la a2 enemy_explosion_image
+				la a2 enemy_explosion_sprite
 			_dont_draw_explosion_sprite:
 			jal display_blit_5x5
 			_enemy_is_dead_dont_draw:

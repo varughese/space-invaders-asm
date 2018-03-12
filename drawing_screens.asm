@@ -33,11 +33,11 @@ enter s0 s1
 		add a0 a0 t0
 		li a1 5
 		add a1 a1 t7
-		la a2 enemy_image
+		la a2 enemy_sprite
 		jal display_blit_5x5
 
 		li a1 54
-		la a2 player_image
+		la a2 player_sprite
 		jal display_blit_5x5
 
 		inc s0
@@ -85,7 +85,7 @@ enter s0, s1
 		mul t0 s0 7
 		add a0 a0 t0
 		move s1 a0
-		la a2 enemy_image
+		la a2 enemy_sprite
 		jal display_blit_5x5
 
 		move a0 s1

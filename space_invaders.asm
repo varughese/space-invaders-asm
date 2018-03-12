@@ -1,18 +1,17 @@
 # MAV120
 # Mathew Varughese
 
-# Helper functions and macros like "print_int" and enter/leave
+# Jarret's library with helper functions and macros like "print_int" and enter/leave
 .include "convenience.asm"
-
-# Library to display things to screen
+# Jarret's Library to let you display things to screen
 .include "display.asm"
-# Variables that hold player "sprites"
-.include "images.asm"
+# Variables that hold player "sprites", so the byte arrays of pixel colors
+.include "sprites.asm"
 # Logic related to enemy and player bullet movement
 .include "bullets.asm"
 # Logic related to player and enemy movement
 .include "movement.asm"
-# All functions that draw player, enemy, bullets
+# All functions that draw players, enemy, bullets
 .include "drawing.asm"
 # Logic to deal with collisions and collision detection
 .include "collision.asm"
@@ -20,6 +19,8 @@
 .include "player.asm"
 # Enemy specific variables
 .include "enemy.asm"
+# Has logic to update round, increase difficulty, reset game, etc
+.include "game_manager.asm"
 
 
 .eqv GAME_TICK_MS      16
@@ -36,9 +37,6 @@
 
 sequence_no:	.word 0
 game_paused: .word 0
-round_no: 1
-last_round_screen_frame: 0
-score: .word 0
 
 # don't get rid of these, they're used by wait_for_next_frame.
 last_frame_time:  .word 0
@@ -205,131 +203,3 @@ enter
 	# update round if they won
 	jal check_if_won
 leave
-
-reset_enemies_and_bullets:
-enter s0
-	li t0 4
-	li t1 5
-	sw t0 enemy_x
-	sw t1 enemy_y
-
-	li s0 0
-	_reset_enemy_loop_main:
-		bge s0 ENEMY_COUNT _reset_enemy_loop_finish
-	_reset_enemy_loop_body:
-		li t0 1
-		sb t0 enemy_active(s0)
-		inc s0
-		b _reset_enemy_loop_main
-	_reset_enemy_loop_finish:
-
-	sw zero enemy_kill_count
-
-	li s0 0
-	_reset_p_bullet_loop_main:
-		bge s0 PLAYER_BULLET_COUNT _reset_p_bullet_loop_finish
-	_reset_p_bullet_loop_body:
-		li t0 0
-		sb t0 bullet_active(s0)
-		inc s0
-		b _reset_p_bullet_loop_main
-	_reset_p_bullet_loop_finish:
-
-	li s0 0
-	_reset_e_bullet_loop_main:
-		bge s0 ENEMY_BULLET_COUNT _reset_e_bullet_loop_finish
-	_reset_e_bullet_loop_body:
-		li t0 0
-		sb t0 enemy_bullet_active(s0)
-		inc s0
-		b _reset_e_bullet_loop_main
-	_reset_e_bullet_loop_finish:
-leave s0
-
-reset_game:
-enter s0
-	li t0 3
-	sw t0 player_lives
-
-	li t0 50
-	sw t0 player_bullets_left
-
-	li t0 1
-	sw t0 round_no
-
-	sw zero score
-
-	sb zero player_invincible
-
-	jal reset_enemies_and_bullets
-leave s0
-
-check_if_won:
-enter
-	lw t0 enemy_kill_count
-	blt t0 ENEMY_COUNT _they_didnt_win
-	jal update_score
-	jal next_round
-	_they_didnt_win:
-leave
-
-update_score:
-enter s0
-	lw s0 score
-
-	lw t0 enemy_kill_count
-	lw t1 round_no
-	mul t0 t0 t1
-	add s0 s0 t0
-
-	lw t0 player_bullets_left
-	sub t0 t0 20
-	ble t0 0 _didnt_get_any_bullet_points
-	add s0 s0 t0
-
-	_didnt_get_any_bullet_points:
-	sw s0 score
-leave s0
-
-
-next_round:
-enter s0
-	li t0 1
-	sw t0 sequence_no
-
-	lw t1 frame_counter
-	add t1 t1 20
-	sw t1 last_round_screen_frame
-
-	lw t0 round_no
-	inc t0
-	sw t0 round_no
-
-	lw s0 player_bullets_left
-	jal reset_enemies_and_bullets
-
-	add s0 s0 20
-	sw s0 player_bullets_left
-
-	jal increase_difficulty
-leave s0
-
-increase_difficulty:
-enter s0
-	lw t9 ENEMY_SHOT_WAIT_TIME
-	sub t9 t9 20
-
-	bge t9 0 _dont_cap_enemy_shot_wait_time
-	li t9 5
-
-	_dont_cap_enemy_shot_wait_time:
-	sw t9 ENEMY_SHOT_WAIT_TIME
-
-	lw t9 ENEMY_MOVEMENT_SPEED
-	dec t9
-	bge t9 3 _dont_cap_enemy_movement_speed
-	li t9 3
-
-	_dont_cap_enemy_movement_speed:
-	sw t9 ENEMY_MOVEMENT_SPEED
-leave s0
