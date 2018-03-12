@@ -21,7 +21,7 @@ enter s0, s1, s2, s3
 			bge s1 ENEMY_PER_COL _finish_checkbullet_hit_enemies_col_loop
 		_checkbullet_hit_enemies_col_loop:
 			lb t0 enemy_active(s2)
-			beq t0 0 _do_not_kill_enemy_and_bullet
+			bne t0 1 _do_not_kill_enemy_and_bullet
 
 			lw a2 enemy_x
 			lw a3 enemy_y
@@ -37,7 +37,8 @@ enter s0, s1, s2, s3
 			beq v0 0 _do_not_kill_enemy_and_bullet
 
 			# bullet hit enemy
-			sb zero enemy_active(s2)
+			li t9 2 # 2 is explosion sprite
+			sb t9 enemy_active(s2)
 			sb zero bullet_active(s3)
 			lw t0 enemy_kill_count
 			inc t0

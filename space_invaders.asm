@@ -254,6 +254,11 @@ enter s0
 	li t0 50
 	sw t0 player_bullets_left
 
+	li t0 1
+	sw t0 round_no
+
+	sw zero score
+
 	sb zero player_invincible
 
 	jal reset_enemies_and_bullets
@@ -303,6 +308,28 @@ enter s0
 	lw s0 player_bullets_left
 	jal reset_enemies_and_bullets
 
-	add s0 s0 10
+	add s0 s0 20
 	sw s0 player_bullets_left
+
+	jal increase_difficulty
+leave s0
+
+increase_difficulty:
+enter s0
+	lw t9 ENEMY_SHOT_WAIT_TIME
+	sub t9 t9 20
+
+	bge t9 0 _dont_cap_enemy_shot_wait_time
+	li t9 5
+
+	_dont_cap_enemy_shot_wait_time:
+	sw t9 ENEMY_SHOT_WAIT_TIME
+
+	lw t9 ENEMY_MOVEMENT_SPEED
+	dec t9
+	bge t9 3 _dont_cap_enemy_movement_speed
+	li t9 3
+
+	_dont_cap_enemy_movement_speed:
+	sw t9 ENEMY_MOVEMENT_SPEED
 leave s0

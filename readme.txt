@@ -31,19 +31,19 @@ There are two ways for a player to die and go to the game over screen:
 
 - [4] Difficulty scaling.
 After winning each round, the enemy's shoot faster and move faster based on round number.
-However, chance of power-ups is increased. Each round you get 10 more bullets.
+However, chance of power-ups is increased. Each round you get 20 more bullets.
 
-A score is also determined based on enemies killed, bullets left, and lives left.
+A score is also determined based on round number, enemies killed, bullets left
 - Each enemy killed is worth the round number they were killed on. So if you beat Round 2, you have at least
 60 points (20 for enemies killed in Round 1, 40 for Round 2).
 - Each bullet left after 20 for each round is a point
 
 - [?] Visual polish.
-Made the intro screen and game over screen look kinda nice, but did not add many animations.
-A ship explosion animation is included.
+Made the intro screen and game over screen look kinda nice. A ship explosion animation is included.
 Not sure how much this counts for.
 
 - [?] Powerups.
 -- extra life powerup
 -- extra ammo powerup
 -- temp invincible powerup
+-- uzi gun powerup (fun one)

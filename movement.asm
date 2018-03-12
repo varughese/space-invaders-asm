@@ -5,7 +5,10 @@
 .eqv PLAYER_Y_LBOUND	46
 .eqv PLAYER_Y_UBOUND	52
 
-.eqv ENEMY_MOVEMENT_SPEED 10 # in frames
+# .eqv ENEMY_MOVEMENT_SPEED 15 # in frames
+
+.data
+ENEMY_MOVEMENT_SPEED: .word 15
 
 .text
 ###### PLAYER MOVEMENT
@@ -115,7 +118,9 @@ enter
 	lw t3 enemy_last_moved
 	lw t4 frame_counter
 	sub t3 t4 t3 # t3 : time since last moved
-	blt t3 ENEMY_MOVEMENT_SPEED, _dont_move_enemies
+
+	lw t9 ENEMY_MOVEMENT_SPEED
+	blt t3 t9, _dont_move_enemies
 	sw t4 enemy_last_moved
 
 

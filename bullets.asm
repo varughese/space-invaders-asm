@@ -5,7 +5,7 @@
 .eqv BULLET_MOVEMENT_SPEED 1
 
 .eqv ENEMY_BULLET_COUNT 5
-.eqv ENEMY_SHOT_WAIT_TIME 90
+# .eqv ENEMY_SHOT_WAIT_TIME 90
 
 .eqv ENEMY_COUNT 20
 .eqv ENEMY_PER_ROW 5
@@ -23,6 +23,8 @@ enemy_bullet_active: .byte 0:ENEMY_BULLET_COUNT
 enemy_bullet_x: .byte 0:ENEMY_BULLET_COUNT
 enemy_bullet_y: .byte 0:ENEMY_BULLET_COUNT
 
+ENEMY_SHOT_WAIT_TIME: .word 90
+
 .text
 ####### ENEMY BULLETS
 check_if_enemy_firing:
@@ -32,8 +34,9 @@ enter
 	lw t1, frame_counter
 	sub t0 t1 t0
 
+	lw t9 ENEMY_SHOT_WAIT_TIME
 	# shoot if frame is below
-	blt t0, ENEMY_SHOT_WAIT_TIME, _finish_check_if_enemy_firing
+	blt t0, t9, _finish_check_if_enemy_firing
 	sw t1, enemy_last_shot
 
 	jal fire_enemy_bullet
@@ -106,7 +109,7 @@ enter s0, s1
 	add t0 t0 s1
 
 	lbu t7 enemy_active(t0)
-	beq t7 0 _get_rand_alive_enemy_loop_top
+	bne t7 1 _get_rand_alive_enemy_loop_top
 	_get_rand_alive_enemy_loop_finish:
 	move v0 s1
 	move v1 s0

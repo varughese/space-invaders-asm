@@ -12,6 +12,8 @@ press_u_message: .asciiz "Press Up"
 to_restart_message: .asciiz "Restart?"
 score_message: .asciiz "Score:"
 
+# this holds frame info that is used for animation
+enemy_frame_counter: 	.word 0:ENEMY_COUNT
 .text
 
 draw_player:
@@ -122,7 +124,7 @@ enter s0, s1, s2, s3, s4
 leave s0, s1, s2, s3, s4
 
 draw_enemies:
-enter s0 s1 s2 s3
+enter s0, s1, s2, s3, s4, s5
 	li s0, 0
 	li s2, 0
 	# draws top to bottom, left to right
@@ -133,8 +135,8 @@ enter s0 s1 s2 s3
 		_draw_enemies_col_main_loop:
 			bge s1 ENEMY_PER_COL _finish_draw_enemies_col_loop
 		_draw_enemies_col_loop:
-			lb t0 enemy_active(s2)
-			beq t0 0 _enemy_is_dead_dont_draw
+			lb t9 enemy_active(s2)
+			beq t9 0 _enemy_is_dead_dont_draw
 
 			lw a0 enemy_x
 			lw a1 enemy_y
@@ -146,6 +148,16 @@ enter s0 s1 s2 s3
 			add a1 a1 t1
 
 			la a2 enemy_image
+			beq t9 1 _dont_draw_explosion_sprite
+				move s4 a0
+				move s5 a1
+				move a0 s0
+				move a1 s1
+				jal handle_enemy_explosion_animation
+				move a0 s4
+				move a1 s5
+				la a2 enemy_explosion_image
+			_dont_draw_explosion_sprite:
 			jal display_blit_5x5
 			_enemy_is_dead_dont_draw:
 			inc s1
@@ -156,7 +168,35 @@ enter s0 s1 s2 s3
 		inc s0
 		b _draw_enemies_row_main_loop
 	_finish_draw_enemies_row:
-leave s0 s1 s2 s3
+leave s0, s1, s2, s3, s4, s5
+
+handle_enemy_explosion_animation:
+enter s0
+	# a0 : current row
+	# a1 : current col
+	mul t0 a0 ENEMY_PER_COL
+	add t0 t0 a1
+	# s0 index in flat array (enemy_index = ENEMY_PER_COL*col + row)
+	move s0 t0
+	mul t0 s0 4 # get the actual array index
+
+	lw t1 enemy_frame_counter(t0)
+	lw t2 frame_counter
+	beq t1 0 _current_frame_is_zero
+
+	sub t3 t2 t1
+	lw t9 ENEMY_MOVEMENT_SPEED
+	ble t3 t9 _finish_handle_enemy_explosion_animation
+	# waited the number of frames
+	sw zero enemy_frame_counter(t0)
+	sb zero enemy_active(s0)
+
+	b _finish_handle_enemy_explosion_animation
+	_current_frame_is_zero:
+	sw t2 enemy_frame_counter(t0)
+
+	_finish_handle_enemy_explosion_animation:
+leave s0
 
 TEST_FN_draw_active_enemies:
 enter s0
@@ -177,124 +217,5 @@ enter s0
 	_draw_active_enemy_loop_finish:
 leave s0
 
-
-draw_start_screen:
-enter s0 s1
-	li	a0, 8
-	li	a1, 20
-	la	a2, intro_message_1
-	jal	display_draw_text
-
-	li	a0, 9
-	li	a1, 27
-	la	a2, intro_message_2
-	jal	display_draw_text
-
-	li t7 0
-
-	lw t0 frame_counter
-	and t0 t0 16
-	beq t0 0 _skip_write_press_b
-
-	li	a0, 8
-	li	a1, 39
-	la	a2, intro_message_3
-	jal	display_draw_text
-
-	li t7 1
-
-	_skip_write_press_b:
-
-	_draw_start_screen_loop_top:
-	bge s0 ENEMY_PER_ROW, _draw_start_screen_loop_finish
-	_draw_start_screen_loop_body:
-		li a0 10
-		mul t0 s0 ENEMY_COL_SPACING
-		add a0 a0 t0
-		li a1 5
-		add a1 a1 t7
-		la a2 enemy_image
-		jal display_blit_5x5
-
-		li a1 54
-		la a2 player_image
-		jal display_blit_5x5
-
-		inc s0
-		b _draw_start_screen_loop_top
-	_draw_start_screen_loop_finish:
-
-leave s0 s1
-
-draw_round_screen:
-enter
-	li	a0, 10
-	li	a1, 30
-	la	a2, round_message
-	jal	display_draw_text
-
-	li a0 40
-	li a1 30
-	lw a2 round_no
-	jal display_draw_int
-leave
-
-draw_game_over_screen:
-enter s0, s1
-	li a0 6 # left-margin val
-	li a1 8
-	la a2, score_message
-	jal	display_draw_text
-
-	li a0 42
-	li a1 8
-	lw a2 score
-	jal display_draw_int
-
-	li a0 6 # left-margin val
-	li a1 22
-	la a2, game_message
-	jal	display_draw_text
-
-	li s0 0
-	_draw_game_over_screen_loop_main:
-		bge s0 3 _draw_game_over_screen_loop_finish
-	_draw_game_over_screen_loop_body:
-		li a0 34
-		li a1 22
-		mul t0 s0 7
-		add a0 a0 t0
-		move s1 a0
-		la a2 enemy_image
-		jal display_blit_5x5
-
-		move a0 s1
-		li a1 29
-		jal display_blit_5x5
-
-		inc s0
-		b _draw_game_over_screen_loop_main
-	_draw_game_over_screen_loop_finish:
-
-	lw t0 frame_counter
-	and t0 t0 16
-	beq t0 0 _skip_write_game_over
-
-	li a0 6 # left-margin val
-	li a1 29
-	la a2, over_message
-	jal	display_draw_text
-
-	_skip_write_game_over:
-
-	li a0 6 # left-margin val
-	li a1 44
-	la a2, to_restart_message
-	jal display_draw_text
-
-	li a0 6 # left-margin val
-	li a1 50
-	la a2, press_u_message
-	jal display_draw_text
-
-leave s0, s1
+### SCREEN DRAWING
+.include "drawing_screens.asm"
