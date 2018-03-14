@@ -1,10 +1,14 @@
-Mathew Varughese
-MAV120
+# Mathew Varughese
+# MAV120
+# Space Invaders
 
-- Made new files that contain different parts of the game
-- Each is explained in the top of the "space_invaders.asm" file
+- I made new asm files that contain different parts of the game, so I didn't just have one super long file
+- Each is `included` and explained in the top of the `space_invaders.asm` file
 
-Basic overview of how game works:
+There is a start screen. You press B to start. There are rounds. Game starts when you click a key.
+When you defeat all the enemies, you go to the next round.
+
+## Overview of How Game Works
 There is a `sequence_no` variable. Each number corresponds to a different game screen.
 
 - Sequence 0: Game Start screen
@@ -26,24 +30,39 @@ There are two ways for a player to die and go to the game over screen:
 - Lose all lives
 - Run out of bullets
 
-# EXTRA CREDIT I DID:
+## EXTRA CREDIT I DID:
 - [2] Game intro and game over screens.
 
 - [4] Difficulty scaling.
-After winning each round, the enemy's shoot faster and move faster based on round number.
-However, chance of power-ups is increased. Each round you get 20 more bullets.
+After winning each round, the enemies shoot faster and move faster.
+Chance of power-ups is increased. And each round you get 20 more bullets.
 
-A score is also determined based on round number, enemies killed, bullets left
+A score is also determined based on round number, enemies killed, and bullets left
 - Each enemy killed is worth the round number they were killed on. So if you beat Round 2, you have at least
 60 points (20 for enemies killed in Round 1, 40 for Round 2).
 - Each bullet left after 20 for each round is a point
 
 - [?] Visual polish.
 Made the intro screen and game over screen look kinda nice. A ship explosion animation is included.
-Not sure how much this counts for.
+Powerups have different sprites. Not sure how much this counts for.
 
-- [?] Powerups.
--- extra life powerup
--- extra ammo powerup
--- temp invincible powerup
--- uzi gun powerup (fun one)
+- [8] Powerups.
+Powerups have a random chance of showing up. In the `powerups.asm` file, `POWER_UP_FRAME_TIMING`
+and `CHANCES_POWERUP_SHOWS` determine these chances. Every `POWER_UP_FRAME_TIMING` frames, there is a
+1 in `CHANCES_POWERUP_SHOWS` chance that a powerup shows. The powerup pops up on the side opposite
+of the player.
+
+Here is a list of the powerups, and a description.
+
+- Extra Life
+-- Red
+-- Adds a life
+- More Ammo
+-- Yellow
+-- 30 More bullets
+- Temp Invincible
+-- Purple
+-- You become invincible, for twice as long as you would if you lost a life
+- Freeze Ships
+-- Blue
+-- The ships freeze and do not shoot

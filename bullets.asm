@@ -57,7 +57,7 @@ enter s0
 	lw t0 enemy_kill_count
 	li t1 ENEMY_COUNT
 	sub t0 t1 t0
-	ble t0 1 _end_fire_e_bullet
+	ble t0 0 _end_fire_e_bullet
 
 	jal get_rand_alive_enemy
 

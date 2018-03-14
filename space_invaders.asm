@@ -15,6 +15,8 @@
 .include "drawing.asm"
 # Logic to deal with collisions and collision detection
 .include "collision.asm"
+# Functions to determine when to do powerups
+.include "powerups.asm"
 # Player specific variables, and modifications like "invisibility"/powerups
 .include "player.asm"
 # Enemy specific variables
@@ -37,6 +39,7 @@
 
 sequence_no:	.word 0
 game_paused: .word 0
+game_start_frame: .word 0
 
 # don't get rid of these, they're used by wait_for_next_frame.
 last_frame_time:  .word 0
@@ -47,8 +50,7 @@ frame_counter:    .word 0
 
 .globl main
 main:
-	# set up anything you need to here,
-	# and wait for the user to press a key to start.
+	jal set_up_powerup_sprite_array
 
 _main_loop:
 	jal play_current_sequence
@@ -115,6 +117,8 @@ enter s0
 		beq v0 0 _finish_play_current_sequence
 		li s0 3
 		sw s0 sequence_no
+		lw t0 frame_counter
+		sw t0 game_start_frame
 		b _finish_play_current_sequence
 
 	_go_to_game_over_screen:
@@ -187,12 +191,17 @@ enter
 	# Fire enemy bullet
 	jal check_if_enemy_firing
 
+	# Check if need to add power up
+	jal check_to_add_powerup
+	jal check_if_touching_powerup
+
 	# Check if player is invincble or has other powerups
 	jal check_player_modifications
 
 	_skip_to_paused_mode:
 
 	# Draw everything,
+	jal draw_powerup
 	jal draw_player
 	jal draw_player_lives
 	jal draw_bullets_lefts

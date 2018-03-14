@@ -33,7 +33,7 @@ enter s0, s1, s2, s3
 			add a3 a3 t1
 
 			li v0 0
-			jal check_if_bullet_in_hitbox
+			jal check_if_inside_hitbox
 			beq v0 0 _do_not_kill_enemy_and_bullet
 
 			# bullet hit enemy
@@ -63,14 +63,14 @@ enter s0
 	move s0 a2
 	lw a2 player_x
 	lw a3 player_y
-	jal check_if_bullet_in_hitbox
+	jal check_if_inside_hitbox
 	beq v0 0 finish_check_if_enemy_bullet_hit_player
 	sb zero enemy_bullet_active(s0)
 	jal player_has_been_hit
 	finish_check_if_enemy_bullet_hit_player:
 leave s0
 
-check_if_bullet_in_hitbox:
+check_if_inside_hitbox:
 enter
 	# (a0, a1, a2, a3)
 	# a0 - x of bullet
@@ -91,11 +91,11 @@ enter
 	blt t1 a1 _not_in_hitbox
 
 	li v0 1
-	b _finish_check_if_bullet_in_hitbox
+	b _finish_check_if_inside_hitbox
 
 	_not_in_hitbox:
 	li v0 0
-	_finish_check_if_bullet_in_hitbox:
+	_finish_check_if_inside_hitbox:
 leave
 
 player_has_been_hit:

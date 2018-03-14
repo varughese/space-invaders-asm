@@ -68,6 +68,24 @@ enter
 	jal display_draw_int
 leave
 
+draw_powerup:
+enter
+	lb t0 current_powerup_on_screen
+	beq t0 0 _finish_draw_powerup
+
+	lw a0 powerup_x
+	lw a1 powerup_y
+
+	# basically made an array of pointers to avoid
+	# a long chain of branches
+
+	mul t0 t0 4
+	lw a2 powerup_sprite_array(t0)
+
+	jal display_blit_5x5
+	_finish_draw_powerup:
+leave
+
 draw_player_bullets:
 enter
 	li a0 PLAYER_BULLET_COUNT

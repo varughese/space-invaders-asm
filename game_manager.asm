@@ -1,8 +1,7 @@
 .data
-round_no: 1
-last_round_screen_frame: 0
+round_no: .word 1
+last_round_screen_frame: .word 0
 score: .word 0
-
 
 .text
 reset_enemies_and_bullets:
@@ -11,6 +10,11 @@ enter s0
 	li t1 5
 	sw t0 enemy_x
 	sw t1 enemy_y
+
+	li t0 30
+	li t1 49
+	sw t0 player_x
+	sw t1 player_y
 
 	li s0 0
 	_reset_enemy_loop_main:
