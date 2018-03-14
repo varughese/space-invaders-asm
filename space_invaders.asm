@@ -51,6 +51,7 @@ frame_counter:    .word 0
 .globl main
 main:
 	jal set_up_powerup_sprite_array
+	jal set_up_powerup_fn_array
 
 _main_loop:
 	jal play_current_sequence

@@ -21,18 +21,11 @@ enter
 	_check_player_mods_not_invincible:
 
 	lbu t0 powerup_player_has_equipped
+
 	beq t0 0 _finish_checking_modifications
-	bgt t0 1 _powerup_not_bullets
-		jal add_bullets_powerup
-		b _finish_checking_modifications
-	_powerup_not_bullets:
-	bgt t0 2 _powerup_not_extra_life
-		jal add_extra_life_powerup
-		b _finish_checking_modifications
-	_powerup_not_extra_life:
-	bgt t0 3 _powerup_not_invincibility
-		jal add_invincibility_powerup
-		b _finish_checking_modifications
+	mul t0 t0 4
+	lw t1 powerup_fn_array(t0)
+	jalr t1
 
 	_powerup_not_invincibility:
 	_finish_checking_modifications:

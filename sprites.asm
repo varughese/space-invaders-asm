@@ -48,7 +48,3 @@ powerup_invincibility: .byte
 	0	4	6	4	0
 	0	6	4	6	0
 	0	0	0	0	0
-
-.eqv NUM_OF_POWERUPS 4 # this is actual one more than the actual number, to simplify some code
-# An array that holds the addresses of the sprites. Makes some code less complex
-powerup_sprite_array: .word 0:NUM_OF_POWERUPS

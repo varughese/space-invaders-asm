@@ -15,9 +15,16 @@ current_powerup_on_screen: .byte 0
 # 2: life
 # 3: uzi
 
+.eqv NUM_OF_POWERUPS 4 # this is actual one more than the actual number, to simplify some code
+
+# Array that holds the addresses of the sprites. Makes code less complex.
+powerup_sprite_array: .word 0:NUM_OF_POWERUPS
+# Array that has pointers to functions.
+powerup_fn_array: .word 0:NUM_OF_POWERUPS
+
 .text
 set_up_powerup_sprite_array:
-enter s0
+enter
 	la t0 powerup_extra_bullets
 	la t1 powerup_extra_life
 	la t2 powerup_invincibility
@@ -28,7 +35,21 @@ enter s0
 	sw t1 powerup_sprite_array(t9)
 	li t9 12
 	sw t2 powerup_sprite_array(t9)
-leave s0
+leave
+
+set_up_powerup_fn_array:
+enter
+	la t0 add_bullets_powerup
+	la t1 add_extra_life_powerup
+	la t2 add_invincibility_powerup
+
+	li t9 4
+	sw t0 powerup_fn_array(t9)
+	li t9 8
+	sw t1 powerup_fn_array(t9)
+	li t9 12
+	sw t2 powerup_fn_array(t9)
+leave
 
 check_to_add_powerup:
 enter s0
@@ -61,6 +82,7 @@ enter s0
 	bne a0 0 _finish_check_to_add_power_up
 
 	jal add_powerup
+
 	lw t1 frame_counter
 	sw t1 last_powerup_frame
 
