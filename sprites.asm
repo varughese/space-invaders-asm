@@ -28,23 +28,30 @@ enemy_explosion_sprite: .byte
 	2	0	0	0	2
 	0	2	0	2	0
 
-powerup_extra_bullets: .byte
+powerup_extra_bullets_sprite: .byte
 	0	0	0	0	0
 	0	2	2	2	0
 	0	2	7	2	0
 	0	2	2	2	0
 	0	0	0	0	0
 
-powerup_extra_life: .byte
+powerup_extra_life_sprite: .byte
 	0	0	0	0	0
 	0	1	7	1	0
 	0	1	1	1	0
 	0	7	1	7	0
 	0	0	0	0	0
 
-powerup_invincibility: .byte
+powerup_invincibility_sprite: .byte
 	0	0	0	0	0
 	0	6	6	6	0
 	0	4	6	4	0
 	0	6	4	6	0
+	0	0	0	0	0
+
+powerup_freeze_sprite: .byte
+	0	0	0	0	0
+	0	5	5	5	0
+	0	5	7	5	0
+	0	5	5	5	0
 	0	0	0	0	0

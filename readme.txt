@@ -52,17 +52,24 @@ and `CHANCES_POWERUP_SHOWS` determine these chances. Every `POWER_UP_FRAME_TIMIN
 1 in `CHANCES_POWERUP_SHOWS` chance that a powerup shows. The powerup pops up on the side opposite
 of the player.
 
+To test them out, you can go to `powerups.asm` file, and change the `CHANCES_POWERUP_SHOWS` variable
+to 1. This will make a powerup show every second. In the same file, in the `add_powerup` function,
+you can force a powerup to always show by setting `a0` to the powerup you want.
+
 Here is a list of the powerups, and a description.
 
-- Extra Life
--- Red
--- Adds a life
-- More Ammo
+- 1. More Ammo
 -- Yellow
 -- 30 More bullets
-- Temp Invincible
--- Purple
+
+- 2. Extra Life
+-- Red
+-- Adds a life
+
+- 3. Temp Invincible
+-- Purple/Green
 -- You become invincible, for twice as long as you would if you lost a life
-- Freeze Ships
+
+- 4. Freeze Ships
 -- Blue
--- The ships freeze and do not shoot
+-- The ships freeze and do not move

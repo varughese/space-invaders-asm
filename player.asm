@@ -26,6 +26,7 @@ enter
 	mul t0 t0 4
 	lw t1 powerup_fn_array(t0)
 	jalr t1
+	sb zero powerup_player_has_equipped
 
 	_powerup_not_invincibility:
 	_finish_checking_modifications:
@@ -47,8 +48,6 @@ enter
 	lw t0 player_bullets_left
 	add t0 t0 30
 	sw t0 player_bullets_left
-
-	sb zero powerup_player_has_equipped
 leave
 
 add_extra_life_powerup:
@@ -56,8 +55,6 @@ enter
 	lw t0 player_lives
 	inc t0
 	sw t0 player_lives
-
-	sb zero powerup_player_has_equipped
 leave
 
 add_invincibility_powerup:
@@ -69,4 +66,13 @@ enter
 	lw t0 frame_counter
 	add t0 t0 INVCINCIBILITY_DURATION
 	sw t0 player_invincible_last_frame
+leave
+
+
+add_freeze_powerup:
+enter
+	# freezes enemies from movibg for a few seconds
+	lw t0 frame_counter
+	add t0 t0 400
+	sw t0 enemy_last_moved
 leave

@@ -9,6 +9,4 @@ enemy_active: 	.byte 1:ENEMY_COUNT
 # 3  7  11  15  19
 
 
-enemy_direction: .word 1
-enemy_last_moved: .word 0
 enemy_kill_count: .word 0

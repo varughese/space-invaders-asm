@@ -9,6 +9,8 @@
 
 .data
 ENEMY_MOVEMENT_SPEED: .word 15
+enemy_direction: .word 1
+enemy_last_moved: .word 0
 
 .text
 ###### PLAYER MOVEMENT

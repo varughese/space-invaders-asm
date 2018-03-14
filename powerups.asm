@@ -10,12 +10,13 @@ powerup_y: .word 52
 
 powerup_player_has_equipped: .byte 0
 current_powerup_on_screen: .byte 0
-# 0: nothing
-# 1: bullets
-# 2: life
-# 3: uzi
+# 0: Nothing
+# 1: More Ammo
+# 2: Extra Life
+# 3: Temp Invincible
+# 4: Freeze Ships
 
-.eqv NUM_OF_POWERUPS 4 # this is actual one more than the actual number, to simplify some code
+.eqv NUM_OF_POWERUPS 5 # this is actual one more than the actual number, to simplify some code
 
 # Array that holds the addresses of the sprites. Makes code less complex.
 powerup_sprite_array: .word 0:NUM_OF_POWERUPS
@@ -25,9 +26,10 @@ powerup_fn_array: .word 0:NUM_OF_POWERUPS
 .text
 set_up_powerup_sprite_array:
 enter
-	la t0 powerup_extra_bullets
-	la t1 powerup_extra_life
-	la t2 powerup_invincibility
+	la t0 powerup_extra_bullets_sprite
+	la t1 powerup_extra_life_sprite
+	la t2 powerup_invincibility_sprite
+	la t3 powerup_freeze_sprite
 
 	li t9 4
 	sw t0 powerup_sprite_array(t9)
@@ -35,6 +37,8 @@ enter
 	sw t1 powerup_sprite_array(t9)
 	li t9 12
 	sw t2 powerup_sprite_array(t9)
+	li t9 16
+	sw t3 powerup_sprite_array(t9)
 leave
 
 set_up_powerup_fn_array:
@@ -42,6 +46,7 @@ enter
 	la t0 add_bullets_powerup
 	la t1 add_extra_life_powerup
 	la t2 add_invincibility_powerup
+	la t3 add_freeze_powerup
 
 	li t9 4
 	sw t0 powerup_fn_array(t9)
@@ -49,6 +54,8 @@ enter
 	sw t1 powerup_fn_array(t9)
 	li t9 12
 	sw t2 powerup_fn_array(t9)
+	li t9 16
+	sw t3 powerup_fn_array(t9)
 leave
 
 check_to_add_powerup:
@@ -95,6 +102,8 @@ enter
 	li a1 NUM_OF_POWERUPS
 	syscall
 	sb a0 current_powerup_on_screen
+
+	# a0 = 1 # uncomment this line to force a certain powerup
 
 	lw t0 player_y
 	sw t0 powerup_y
