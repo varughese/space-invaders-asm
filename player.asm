@@ -20,13 +20,9 @@ enter
 	jal check_player_invincibility
 	_check_player_mods_not_invincible:
 
-	la t0 check_player_invincibility
-	jal t0
-
 	lbu t0 powerup_player_has_equipped
 	beq t0 0 _finish_checking_modifications
 	bgt t0 1 _powerup_not_bullets
-	# bullets
 		jal add_bullets_powerup
 		b _finish_checking_modifications
 	_powerup_not_bullets:
