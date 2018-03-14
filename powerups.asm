@@ -3,7 +3,7 @@
 .data
 last_powerup_frame: .word 0
 POWER_UP_FRAME_TIMING: .word 60
-CHANCES_POWERUP_SHOWS: .word 1 # 1 in a __ chance
+CHANCES_POWERUP_SHOWS: .word 20 # 1 in a __ chance
 
 powerup_x: .word 0
 powerup_y: .word 52
