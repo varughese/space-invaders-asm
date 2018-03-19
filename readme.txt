@@ -2,6 +2,8 @@
 # MAV120
 # Space Invaders
 
+- Everything works. The extra credit I did is at the bottom.
+
 - I made new asm files that contain different parts of the game, so I didn't just have one super long file
 - Each is `included` and explained in the top of the `space_invaders.asm` file
 

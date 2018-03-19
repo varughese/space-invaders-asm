@@ -1,3 +1,6 @@
+# MAV120
+# Mathew Varughese
+
 .data
 # PLAYER
 player_x: .word 30

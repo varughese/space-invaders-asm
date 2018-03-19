@@ -1,3 +1,6 @@
+# MAV120
+# Mathew Varughese
+
 .eqv PLAYER_BULLET_COUNT 10
 # The time in frames between shots
 .eqv PLAYER_SHOT_WAIT_TIME 10 # in frames

@@ -1,3 +1,6 @@
+# MAV120
+# Mathew Varughese
+
 .data
 round_no: .word 1
 last_round_screen_frame: .word 0
@@ -120,6 +123,11 @@ enter s0
 	add s0 s0 20
 	sw s0 player_bullets_left
 
+	lw s0 CHANCES_POWERUP_SHOWS
+	dec s0
+	blt s0 2 _skip_powerup_chance_decrease
+	sw s0 CHANCES_POWERUP_SHOWS
+	_skip_powerup_chance_decrease:
 	jal increase_difficulty
 leave s0
 

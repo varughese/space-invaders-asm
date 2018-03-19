@@ -1,3 +1,6 @@
+# MAV120
+# Mathew Varughese
+
 .data
 enemy_x:	.word 4
 enemy_y:	.word 5

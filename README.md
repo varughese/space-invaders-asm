@@ -61,19 +61,21 @@ you can force a powerup to always show by setting `a0` to the powerup you want.
 Here is a list of the powerups, and a description.
 
 - 1. More Ammo
-	- Yellow
 	- ![](https://i.imgur.com/AYW6jO6.png)
+	- Yellow
 	- 30 More bullets
 
 - 2. Extra Life
-	- Red
 	- ![](https://i.imgur.com/vdL65Rf.png)
+	- Red
 	- Adds a life
 
 - 3. Temp Invincible
-	- Purple/Green ![](https://i.imgur.com/3iXM5u0.png)
+	- ![](https://i.imgur.com/3iXM5u0.png)
+	- Purple/Green
 	- You become invincible, for twice as long as you would if you lost a life
 
 - 4. Freeze Ships
-	- Blue ![](https://i.imgur.com/c5uHfZX.png)
+	- ![](https://i.imgur.com/c5uHfZX.png)
+	- Blue
 	- The ships freeze and do not move

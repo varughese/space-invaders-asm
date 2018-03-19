@@ -1,3 +1,6 @@
+# MAV120
+# Mathew Varughese
+
 draw_start_screen:
 enter s0 s1
 	li	a0, 8
