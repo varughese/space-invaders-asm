@@ -1,11 +1,7 @@
-# Mathew Varughese
-# MAV120
 # Space Invaders
+Painfully coded in assembly. For `Computer Organization and Assembly` at Pitt.
 
 ![](https://i.imgur.com/j0pgRYJ.png)
-
-- I made new asm files that contain different parts of the game, so I didn't just have one super long file
-- Each is `included` and explained in the top of the `space_invaders.asm` file
 
 There is a start screen. You press B to start. There are rounds. Game starts when you click a key.
 When you defeat all the enemies, you go to the next round.
@@ -60,22 +56,22 @@ you can force a powerup to always show by setting `a0` to the powerup you want.
 
 Here is a list of the powerups, and a description.
 
-- 1. More Ammo
+1. More Ammo
 	- ![](https://i.imgur.com/AYW6jO6.png)
 	- Yellow
 	- 30 More bullets
 
-- 2. Extra Life
+2. Extra Life
 	- ![](https://i.imgur.com/vdL65Rf.png)
 	- Red
 	- Adds a life
 
-- 3. Temp Invincible
+3. Temp Invincible
 	- ![](https://i.imgur.com/3iXM5u0.png)
 	- Purple/Green
 	- You become invincible, for twice as long as you would if you lost a life
 
-- 4. Freeze Ships
+4. Freeze Ships
 	- ![](https://i.imgur.com/c5uHfZX.png)
 	- Blue
 	- The ships freeze and do not move
