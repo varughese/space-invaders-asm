@@ -1,6 +1,14 @@
 # Space Invaders
 Painfully coded in assembly. For `Computer Organization and Assembly` at Pitt.
 
+## Instructions to View
+- Download MARS, a MIPS emulator [here](https://jarrettbillingsley.github.io/teaching/classes/cs0447/software/Mars_2184_b.jar).
+- Download this repo, and open `space_invaders.asm` in MARS
+- Click the Wrench to assemble
+- Click `Tools > Keypad and LED Display Simulator`
+- Click `Connect to MIPS`
+- You should see a start screen
+
 ![](https://i.imgur.com/j0pgRYJ.png)
 
 There is a start screen. You press B to start. There are rounds. Game starts when you click a key.
