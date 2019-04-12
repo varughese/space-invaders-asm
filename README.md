@@ -2,7 +2,7 @@
 Painfully coded in assembly. For `Computer Organization and Assembly` at Pitt.
 
 ## Instructions to View
-- Download MARS, a MIPS emulator [here](https://jarrettbillingsley.github.io/teaching/classes/cs0447/software/Mars_2184_b.jar).
+- Download MARS, a MIPS emulator [here](https://jarrettbillingsley.github.io/teaching/classes/cs0447/software/Mars_2191_c.jar).
 - Download this repo, and open `space_invaders.asm` in MARS
 - Click the Wrench to assemble
 - Click `Tools > Keypad and LED Display Simulator`
