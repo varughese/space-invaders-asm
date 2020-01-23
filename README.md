@@ -9,7 +9,8 @@ Painfully coded in assembly. For `Computer Organization and Assembly` at Pitt.
 - Click `Connect to MIPS`
 - You should see a start screen
 
-![](https://i.imgur.com/j0pgRYJ.png)
+![](https://i.imgur.com/VpKwPsZ.gifv)
+/* ![](https://i.imgur.com/j0pgRYJ.png) */
 
 There is a start screen. You press B to start. There are rounds. Game starts when you click a key.
 When you defeat all the enemies, you go to the next round.
